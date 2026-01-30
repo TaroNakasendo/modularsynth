@@ -112,6 +112,7 @@ const appStart = () => {
     try {
         const kb = modules[0];
         const vco1 = modules[1];
+        const vco2 = modules[2];
         const lfo = modules[3];
         const vcf = modules[4];
         const vca = modules[5];
@@ -119,11 +120,17 @@ const appStart = () => {
         const reverb = modules[6];
         const output = modules[8];
 
-        // Pitch
+        // Pitch (Dual VCO Unison)
         patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
+        patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
+        
+        // Detune VCO2 for thick sound
+        vco2.oscillator.detune.value = 10; 
 
-        // Audio Chain (VCO -> VCF -> VCA -> REVERB -> OUT)
+        // Audio Chain: Summing both VCOs into VCF
         patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
+        patchManager.connect(vco2.getJack('OUT'), vcf.getJack('IN'));
+        
         patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
         patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
         patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));

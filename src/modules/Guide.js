@@ -30,8 +30,12 @@ export class Guide extends BaseModule {
       (ド レ ミ ... 1オクターブ半)</p>
       
       <p><strong style="color:#fff">🎛️ パッチングのコツ</strong><br>
-      - <span style="color:cyan">LFO OUT</span> を <span style="color:cyan">VCF CV</span> に繋ぐと「ワウワウ」効果！<br>
-      - <span style="color:cyan">KEYBOARD GATE</span> を <span style="color:cyan">VCA CV</span> に繋ぐと鍵盤を押した時だけ音が鳴ります。</p>
+      - <span style="color:cyan">LFO OUT</span> &rarr; <span style="color:cyan">VCF CV</span> で「ワウワウ」！<br>
+      - <span style="color:cyan">KEYBOARD GATE</span> &rarr; <span style="color:cyan">VCA CV</span> で発音制御。<br>
+      - <span style="color:orange">VCO 2</span> も使うと音が分厚くなります！<br>
+        1. KEYBOARD CV &rarr; 両方のVCO V/OCT<br>
+        2. 両方のVCO OUT &rarr; VCF IN<br>
+        3. 片方のDETUNEを少しずらすとGOOD👍</p>
       
       <p><strong style="color:#fff">💡 操作</strong><br>
       - ジャックをクリック: ケーブル切断<br>
