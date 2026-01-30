@@ -6,6 +6,7 @@ import { VCF } from './modules/VCF.js';
 import { LFO } from './modules/LFO.js';
 import { Output } from './modules/Output.js';
 import { Keyboard } from './modules/Keyboard.js';
+import { Reverb } from './modules/Reverb.js';
 import { PatchManager } from './core/PatchManager.js';
 
 const appStart = () => {
@@ -27,6 +28,7 @@ const appStart = () => {
     new LFO(),
     new VCF(),
     new VCA(),
+    new Reverb(),
     new Output()
   ];
   
@@ -111,15 +113,17 @@ const appStart = () => {
         const lfo = modules[3];
         const vcf = modules[4];
         const vca = modules[5];
-        const output = modules[6];
+        const reverb = modules[6];
+        const output = modules[7];
 
         // Pitch
         patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
 
-        // Audio Chain
+        // Audio Chain (VCO -> VCF -> VCA -> REVERB -> OUT)
         patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
         patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
-        patchManager.connect(vca.getJack('OUT'), output.getJack('IN'));
+        patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
+        patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
 
         // Gate & Mod
         patchManager.connect(kb.getJack('GATE'), vca.getJack('CV'));
