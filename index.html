@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analog Modular Synth</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="synth-case">
+        <canvas id="cable-canvas"></canvas>
+        <div id="rack" class="rack-container">
+          <!-- Modules will be injected here -->
+        </div>
+      </div>
+      <div id="controls">
+        <button id="start-audio">Start Audio</button>
+        <div class="instructions">Drag from Jack to Jack to patch. Click Jack to disconnect.</div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
