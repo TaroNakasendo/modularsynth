@@ -72,6 +72,26 @@ export class Keyboard extends BaseModule {
     this.display.style.color = 'var(--accent-color)';
     this.display.innerText = 'WAITING';
     this.element.appendChild(this.display);
+
+    // Flowing LEDs
+    const ledRow = document.createElement('div');
+    ledRow.style.display = 'flex';
+    ledRow.style.justifyContent = 'center';
+    ledRow.style.gap = '6px';
+    ledRow.style.marginTop = '10px';
+    
+    this.leds = [];
+    for(let i=0; i<8; i++) {
+        const led = document.createElement('div');
+        led.style.width = '8px';
+        led.style.height = '8px';
+        led.style.borderRadius = '50%';
+        led.style.background = '#333';
+        led.style.boxShadow = 'inset 1px 1px 2px rgba(0,0,0,0.5)';
+        ledRow.appendChild(led);
+        this.leds.push(led);
+    }
+    this.element.appendChild(ledRow);
   }
 
   createButton(label, callback, className) {
@@ -135,6 +155,21 @@ export class Keyboard extends BaseModule {
     this.gateNode.offset.setValueAtTime(0, now + gateLen);
     
     this.display.innerText = `ARP: ${semitone}`;
+
+    // Update LEDs
+    // Cycle through 8 LEDs
+    this.leds.forEach((led, i) => {
+       // Visual "chase" based on index
+       // Use modulo of total keys or just simple counter if we had a global beat?
+       // Just use arpIndex.
+       if (i === (this.arpIndex % 8)) {
+           led.style.background = '#ff4400';
+           led.style.boxShadow = '0 0 8px #ff4400';
+       } else {
+           led.style.background = '#333';
+           led.style.boxShadow = 'inset 1px 1px 2px rgba(0,0,0,0.5)';
+       }
+    });
   }
 
   initKeyboardListeners() {
