@@ -21,17 +21,37 @@ export class VCO extends BaseModule {
     this.addKnob('FREQ', this.oscillator.frequency, 20, 2000, 440);
     this.addKnob('DETUNE', this.oscillator.detune, -1200, 1200, 0);
 
-    // Waveform 'Knob' (Stepped)
-    // We didn't build a stepped knob, but we can hack it or add logic.
-    // Let's just create a waveform cycle button or repurpose the knob.
+    // Waveform Selector
     this.waveTypes = ['sine', 'triangle', 'sawtooth', 'square'];
     this.currentWave = 2; // saw
     
-    // Custom UI for wave selector?
-    // Let's just use a knob for now: 0-3
-    // But BaseModule knob maps directly to AudioParam...
-    // I'll override or add a custom control later. 
-    // For now, let's just default to Saw and focus on wiring.
+    // Wave Select Button
+    const waveBtn = document.createElement('div');
+    waveBtn.className = 'button';
+    waveBtn.style.marginTop = '5px';
+    waveBtn.style.marginBottom = '10px';
+    waveBtn.style.textAlign = 'center';
+    waveBtn.style.cursor = 'pointer';
+    waveBtn.style.fontSize = '0.7rem';
+    waveBtn.style.fontWeight = 'bold';
+    waveBtn.style.color = '#ff9900';
+    waveBtn.style.background = '#222';
+    waveBtn.style.padding = '5px';
+    waveBtn.style.borderRadius = '4px';
+    waveBtn.style.border = '1px solid #444';
+    waveBtn.innerText = 'SAW';
+    
+    waveBtn.onclick = () => {
+        this.currentWave = (this.currentWave + 1) % this.waveTypes.length;
+        const type = this.waveTypes[this.currentWave];
+        this.oscillator.type = type;
+        
+        // Symbol or Abbrev
+        const labels = { 'sine': 'SIN', 'triangle': 'TRI', 'sawtooth': 'SAW', 'square': 'SQR' };
+        waveBtn.innerText = labels[type];
+    };
+    
+    this.controlsContainer.appendChild(waveBtn);
     
     // Jacks
     // Output: Direct form Oscillator
