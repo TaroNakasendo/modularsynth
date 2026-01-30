@@ -37,10 +37,14 @@ export class VCO extends BaseModule {
     // Output: Direct form Oscillator
     this.addJack('OUT', 'out', this.oscillator);
     
-    // Input: FM / CV
-    // Connects to frequency.
-    // If we want 1V/Oct, we need a Gain node scaling input to reasonable freq change.
-    // Let's just make it a linear FM for now.
+    // 1V/Oct Input
+    // Route to detune: 1V = 1200 cents
+    this.voctGain = this.context.createGain();
+    this.voctGain.gain.value = 1200;
+    this.voctGain.connect(this.oscillator.detune);
+    this.addJack('V/OCT', 'in', { node: this.voctGain });
+    
+    // Input: FM / CV (Linear FM)
     this.fmGain = this.context.createGain();
     this.fmGain.gain.value = 100; // Modulation depth
     this.fmGain.connect(this.oscillator.frequency); // Linear FM

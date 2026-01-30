@@ -5,6 +5,7 @@ import { VCA } from './modules/VCA.js';
 import { VCF } from './modules/VCF.js';
 import { LFO } from './modules/LFO.js';
 import { Output } from './modules/Output.js';
+import { Keyboard } from './modules/Keyboard.js';
 import { PatchManager } from './core/PatchManager.js';
 
 const appStart = () => {
@@ -20,12 +21,12 @@ const appStart = () => {
   
   // Instantiate Modules
   const modules = [
+    new Keyboard(), // Input
     new VCO(),
-    new VCO(), // Dual VCO
+    new VCO(),
     new LFO(),
-    new VCF(), // Filter
+    new VCF(),
     new VCA(),
-    new VCA(), // Dual VCA
     new Output()
   ];
   
@@ -98,20 +99,31 @@ const appStart = () => {
   });
 
   // Default Patch
+  // Keyboard CV -> VCO 1 V/OCT
+  // Keyboard Gate -> VCA CV
   // VCO 1 OUT -> VCF IN
-  // VCF OUT -> OUTPUT IN
-  // LFO OUT -> VCF CV
+  // VCF OUT -> VCA IN
+  // VCA OUT -> OUTPUT IN
   setTimeout(() => {
     try {
-        const vco1 = modules[0];
-        const lfo = modules[2];
-        const vcf = modules[3];
+        const kb = modules[0];
+        const vco1 = modules[1];
+        const lfo = modules[3];
+        const vcf = modules[4];
+        const vca = modules[5];
         const output = modules[6];
 
-        // Connect
+        // Pitch
+        patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
+
+        // Audio Chain
         patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
-        patchManager.connect(vcf.getJack('OUT'), output.getJack('IN'));
-        patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV'));
+        patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+        patchManager.connect(vca.getJack('OUT'), output.getJack('IN'));
+
+        // Gate & Mod
+        patchManager.connect(kb.getJack('GATE'), vca.getJack('CV'));
+        patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV')); 
     } catch (e) {
         console.error("Default patch error", e);
     }
