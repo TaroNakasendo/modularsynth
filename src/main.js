@@ -7,6 +7,7 @@ import { LFO } from './modules/LFO.js';
 import { Output } from './modules/Output.js';
 import { Keyboard } from './modules/Keyboard.js';
 import { Reverb } from './modules/Reverb.js';
+import { Guide } from './modules/Guide.js';
 import { PatchManager } from './core/PatchManager.js';
 
 const appStart = () => {
@@ -29,6 +30,7 @@ const appStart = () => {
     new VCF(),
     new VCA(),
     new Reverb(),
+    new Guide(),
     new Output()
   ];
   
@@ -113,8 +115,9 @@ const appStart = () => {
         const lfo = modules[3];
         const vcf = modules[4];
         const vca = modules[5];
+        // Guide is modules[7], Output is modules[8]
         const reverb = modules[6];
-        const output = modules[7];
+        const output = modules[8];
 
         // Pitch
         patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
