@@ -18,7 +18,7 @@ import { PatchManager } from './core/PatchManager.js';
 const appStart = () => {
   const rackEl = document.getElementById('rack');
   const canvasEl = document.getElementById('cable-canvas');
-  const startBtn = document.getElementById('start-audio');
+
   
   // Audio Context
   const audioCtx = getAudioContext();
@@ -108,18 +108,7 @@ const appStart = () => {
     }
   });
 
-  // Start/Stop Audio
-  startBtn.addEventListener('click', () => {
-    if (audioCtx.state === 'suspended') {
-        resumeAudioContext();
-        startBtn.innerText = 'Audio Active';
-        startBtn.classList.add('active');
-    } else if (audioCtx.state === 'running') {
-        audioCtx.suspend();
-        startBtn.innerText = 'Start Audio';
-        startBtn.classList.remove('active');
-    }
-  });
+
 
   // Default Patch
   // Keyboard CV -> VCO 1 V/OCT
@@ -434,9 +423,6 @@ const appStart = () => {
       // Resume audio context if needed
       if (audioCtx.state === 'suspended') {
         resumeAudioContext();
-        startBtn.innerText = 'Audio Active';
-        startBtn.classList.add('active');
-        // startBtn.disabled = true; // Removed to allow toggling off
       }
       loadPreset(preset);
     });

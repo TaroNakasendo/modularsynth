@@ -234,3 +234,63 @@ button.active {
   background: #444;
   border-color: #777;
 }
+
+#virtual-keyboard {
+  margin-top: 15px;
+  position: relative;
+  height: 90px; /* Two rows height */
+  width: 100%;
+  max-width: 600px;
+  overflow-x: auto;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.v-key {
+  position: absolute;
+  border: 1px solid #555;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 0.8rem;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+  transition: all 0.1s;
+}
+
+.v-key.white {
+  background: #ccc;
+  color: #333;
+  height: 40px;
+  width: 40px;
+  z-index: 1;
+  top: 45px; /* Low row */
+}
+
+.v-key.white:active, .v-key.white.active {
+  background: var(--accent-color);
+  color: #000;
+  transform: translateY(2px);
+  box-shadow: 0 0 10px var(--accent-color);
+}
+
+.v-key.black {
+  background: #333;
+  color: #ddd;
+  height: 40px; /* Same size as white or similar? User liked 'small size'. Let's keep 30 or 40. */
+  width: 40px; /* Make same size? User said "shape and color of previous small size". Previous was 40x40 squares. */
+  z-index: 1;
+  border-color: #222;
+  top: 0px; /* High row */
+  font-size: 0.8rem;
+}
+
+.v-key.black:active, .v-key.black.active {
+  background: var(--accent-color);
+  color: #000;
+  box-shadow: 0 0 10px var(--accent-color);
+}

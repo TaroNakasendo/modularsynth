@@ -78,6 +78,11 @@ export class Keyboard extends BaseModule {
     };
 
     this.initKeyboardListeners();
+    // Auto-render if container exists
+    const container = document.getElementById('virtual-keyboard');
+    if (container) {
+        this.renderVirtualKeyboard(container);
+    }
     
     // Display
     this.display = document.createElement('div');
@@ -126,71 +131,9 @@ export class Keyboard extends BaseModule {
     btn.addEventListener('click', callback);
     this.controlsContainer.appendChild(btn);
   }
-
-  startArp() {
-    if (this.arpInterval) clearInterval(this.arpInterval);
-    this.arpTick(); 
-    this.arpInterval = setInterval(() => this.arpTick(), this.arpRate);
-  }
-
-  stopArp() {
-    if (this.arpInterval) clearInterval(this.arpInterval);
-    this.arpInterval = null;
-  }
-
-  restartArp() {
-      this.stopArp();
-      this.startArp();
-  }
-
-  arpTick() {
-    if (this.context.state === 'suspended') return;
-    
-    if (this.activeKeys.length === 0) {
-        this.gateNode.offset.setValueAtTime(0, this.context.currentTime);
-        this.display.innerText = 'ARP...';
-        return; 
-    }
-
-    this.arpIndex = (this.arpIndex + 1) % this.activeKeys.length;
-    
-    const key = this.activeKeys[this.arpIndex];
-    if (key === undefined) return; 
-
-    const semitone = this.keyMap[key];
-    const volts = semitone / 12;
-    const now = this.context.currentTime;
-    
-    this.cvNode.offset.setValueAtTime(volts, now);
-    
-    // Gate Pulse
-    const gateLen = (this.arpRate / 1000) * 0.5;
-    this.gateNode.offset.cancelScheduledValues(now);
-    this.gateNode.offset.setValueAtTime(1, now);
-    this.gateNode.offset.setValueAtTime(0, now + gateLen);
-    
-    this.display.innerText = `ARP: ${semitone}`;
-
-    // Update LEDs
-    // Cycle through 8 LEDs
-    this.leds.forEach((led, i) => {
-       // Visual "chase" based on index
-       // Use modulo of total keys or just simple counter if we had a global beat?
-       // Just use arpIndex.
-       if (i === (this.arpIndex % 8)) {
-           led.style.background = '#ff4400';
-           led.style.boxShadow = '0 0 8px #ff4400';
-       } else {
-           led.style.background = '#333';
-           led.style.boxShadow = 'inset 1px 1px 2px rgba(0,0,0,0.5)';
-       }
-    });
-  }
-
-  initKeyboardListeners() {
-    window.addEventListener('keydown', (e) => {
-      if (e.repeat) return;
-      const key = e.key.toLowerCase();
+  
+  // Logic extracted for Virtual Keyboard
+  handleKeyDown(key) {
       if (this.keyMap.hasOwnProperty(key)) {
         
         // Latch Logic: Start a new chord if hands were off
@@ -214,26 +157,153 @@ export class Keyboard extends BaseModule {
              this.triggerNote();
           }
         }
+        
+        // Update Visuals
+        this.updateVirtualKey(key, true);
       }
-    });
+  }
 
-    window.addEventListener('keyup', (e) => {
-      const key = e.key.toLowerCase();
-      
+  handleKeyUp(key) {
       // Update physical tracking
       if (this.physicalKeys.includes(key)) {
           this.physicalKeys = this.physicalKeys.filter(k => k !== key);
       }
 
       // Removal logic
-      // If Latch is ON, we NEVER remove keys on keyup. 
-      // They persist until a new key is pressed while hands are off.
       if (!this.isLatchOn) {
           if (this.activeKeys.includes(key)) {
             this.activeKeys = this.activeKeys.filter(k => k !== key);
             if (!this.isArpOn) this.triggerNote();
           }
       }
+      
+      // Update Visuals
+      // Only turn off if not latched or if latched logic allows?
+      // Visuals should reflect "Physical" State mostly, or Active State?
+      // Let's reflect Active State for feedback
+      if (!this.activeKeys.includes(key)) {
+          this.updateVirtualKey(key, false);
+      }
+  }
+
+  updateVirtualKey(key, isActive) {
+      // Find button by data-key
+      const btn = document.querySelector(`.v-key[data-key="${key}"]`);
+      if (btn) {
+          if (isActive) btn.classList.add('active');
+          else btn.classList.remove('active');
+      }
+  }
+
+  renderVirtualKeyboard(container) {
+      container.innerHTML = '';
+      
+      const keys = [
+          { k: 'z', n: 0, l: 'C' }, { k: 's', n: 1, l: 'C#' }, { k: 'x', n: 2, l: 'D' }, { k: 'd', n: 3, l: 'D#' },
+          { k: 'c', n: 4, l: 'E' }, { k: 'v', n: 5, l: 'F' }, { k: 'g', n: 6, l: 'F#' }, { k: 'b', n: 7, l: 'G' },
+          { k: 'h', n: 8, l: 'G#' }, { k: 'n', n: 9, l: 'A' }, { k: 'j', n: 10, l: 'A#' }, { k: 'm', n: 11, l: 'B' },
+          
+          { k: 'q', n: 12, l: 'C' }, { k: '2', n: 13, l: 'C#' }, { k: 'w', n: 14, l: 'D' }, { k: '3', n: 15, l: 'D#' },
+          { k: 'e', n: 16, l: 'E' }, { k: 'r', n: 17, l: 'F' }, { k: '5', n: 18, l: 'F#' }, { k: 't', n: 19, l: 'G' },
+          { k: '6', n: 20, l: 'G#' }, { k: 'y', n: 21, l: 'A' }, { k: '7', n: 22, l: 'A#' }, { k: 'u', n: 23, l: 'B' }
+      ];
+      keys.sort((a,b) => a.n - b.n);
+
+      const KEY_WIDTH = 40;
+      const GAP = 3;
+      
+      // Separate White and Black for positioning
+      // We need to know the index of the white key in the sequence of white keys
+      let whiteCount = 0;
+      const whitePositions = {}; // Map note index to left pixel position
+
+      // First Pass: Place White Keys
+      keys.forEach(item => {
+          const isBlack = item.l.includes('#');
+          if (!isBlack) {
+              const left = whiteCount * (KEY_WIDTH + GAP);
+              whitePositions[item.n] = left;
+              whiteCount++;
+              
+              const btn = this.createKeyElement(item);
+              btn.classList.add('white');
+              btn.style.left = `${left}px`;
+              container.appendChild(btn);
+          }
+      });
+      
+      // Second Pass: Place Black Keys
+      keys.forEach(item => {
+          const isBlack = item.l.includes('#');
+          if (isBlack) {
+             const btn = this.createKeyElement(item);
+             btn.classList.add('black');
+             
+             // Find previous white key position
+             // The previous note is item.n - 1 (should be white mostly, but checks logic)
+             // C# (1) -> prev is C (0), next is D (2)
+             const prevWhitePos = whitePositions[item.n - 1];
+             // The next white key is item.n + 1
+             const nextWhitePos = whitePositions[item.n + 1];
+             
+             if (prevWhitePos !== undefined && nextWhitePos !== undefined) {
+                 // Center between them
+                 // Gap center is prevWhitePos + KEY_WIDTH + GAP/2
+                 // Let's rely on visuals: center of gap
+                 const gapCenter = prevWhitePos + KEY_WIDTH + (GAP/2);
+                 const left = gapCenter - (KEY_WIDTH / 2);
+                 btn.style.left = `${left}px`;
+             } else {
+                 // Fallback if boundary (shouldn't happen with standard chromatic list starting C)
+                 btn.style.left = '0px';
+             }
+
+             container.appendChild(btn);
+          }
+      });
+      
+      container.style.width = `${whiteCount * (KEY_WIDTH + GAP)}px`;
+      container.style.margin = '15px auto'; 
+  }
+
+  createKeyElement(item) {
+      const btn = document.createElement('div');
+      btn.className = 'v-key';
+      btn.dataset.key = item.k;
+      btn.innerText = item.k.toUpperCase(); // + `\n${item.l}`;
+      
+      const down = (e) => {
+          e.preventDefault();
+          this.handleKeyDown(item.k);
+      };
+      const up = (e) => {
+          e.preventDefault();
+          this.handleKeyUp(item.k);
+      };
+      
+      btn.addEventListener('mousedown', down);
+      btn.addEventListener('mouseup', up);
+      btn.addEventListener('mouseleave', up); 
+      btn.addEventListener('touchstart', down);
+      btn.addEventListener('touchend', up);
+      
+      return btn;
+  }
+
+  initKeyboardListeners() {
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      const key = e.key.toLowerCase();
+      if (this.keyMap.hasOwnProperty(key) && !e.ctrlKey && !e.metaKey) {
+          // Check if input element is focused?
+          if (document.activeElement.tagName === 'INPUT') return;
+          this.handleKeyDown(key);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const key = e.key.toLowerCase();
+      this.handleKeyUp(key);
     });
   }
 
