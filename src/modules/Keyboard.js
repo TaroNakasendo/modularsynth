@@ -26,8 +26,7 @@ export class Keyboard extends BaseModule {
     this.ribbonGateNode.offset.value = 0;
     this.ribbonGateNode.start();
     
-    // Mix ribbon into main output so it works without patching
-    this.ribbonCvNode.connect(this.cvNode.offset);
+    // Mix ribbon gate into main gate
     this.ribbonGateNode.connect(this.gateNode.offset);
 
     this.addJack('RIBBON', 'out', this.ribbonCvNode);
@@ -330,6 +329,50 @@ export class Keyboard extends BaseModule {
       ribbon.style.cursor = 'crosshair';
       ribbon.style.touchAction = 'none'; // Prevent scrolling
       
+      ribbon.style.display = 'flex';
+      ribbon.style.overflow = 'hidden';
+
+      // Dots for notes
+      const isBlackKey = (n) => [1, 3, 6, 8, 10].includes(n % 12);
+
+      for(let i=0; i<24; i++) {
+        const slice = document.createElement('div');
+        slice.style.flex = '1';
+        slice.style.height = '100%';
+        slice.style.boxSizing = 'border-box';
+        slice.style.display = 'flex';
+        slice.style.justifyContent = 'center';
+        
+        // Position dots: Black keys top, White keys bottom
+        if (isBlackKey(i)) {
+            slice.style.alignItems = 'flex-start';
+            slice.style.paddingTop = '5px';
+        } else {
+            slice.style.alignItems = 'flex-end';
+            slice.style.paddingBottom = '5px';
+        }
+        
+        const dot = document.createElement('div');
+        dot.style.borderRadius = '50%';
+        
+        // Visuals
+        if (i % 12 === 0) {
+            // C notes: Brighter/Larger (White key, so bottom)
+            dot.style.width = '6px';
+            dot.style.height = '6px';
+            dot.style.background = '#ccc';
+            dot.style.boxShadow = '0 0 2px #fff';
+        } else {
+            // Semitones: Small subtle dot
+            dot.style.width = '3px';
+            dot.style.height = '3px';
+            dot.style.background = '#555';
+        }
+        
+        slice.appendChild(dot);
+        ribbon.appendChild(slice);
+      }
+      
       // Marker for touch position
       const marker = document.createElement('div');
       marker.style.position = 'absolute';
@@ -365,7 +408,11 @@ export class Keyboard extends BaseModule {
         const range = 24 / 12; // 2 Octaves
         const voltage = (x / rect.width) * range + this.octave;
         
-        this.ribbonCvNode.offset.setValueAtTime(voltage, this.context.currentTime);
+        const now = this.context.currentTime;
+        this.ribbonCvNode.offset.setValueAtTime(voltage, now);
+        // Also update main CV for direct play without patching
+        this.cvNode.offset.cancelScheduledValues(now);
+        this.cvNode.offset.setValueAtTime(voltage, now);
         
         // Update Display optional?
         // this.display.innerText = `RBN: ${voltage.toFixed(2)}v`;
@@ -377,8 +424,7 @@ export class Keyboard extends BaseModule {
           
           const stopRibbon = () => {
               this.ribbonGateNode.offset.setValueAtTime(0, this.context.currentTime);
-              // Reset Pitch Bend effect when released
-              this.ribbonCvNode.offset.setTargetAtTime(0, this.context.currentTime, 0.1);
+              // Do NOT reset CV. Let it hold for release phase.
               
               marker.style.display = 'none';
               document.removeEventListener('mousemove', updateRibbon);
