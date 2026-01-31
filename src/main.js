@@ -487,6 +487,45 @@ const appStart = async () => {
           
           reverb.setKnobValue('MIX', 0.4);
           reverb.setKnobValue('TIME', 2.0);
+      } else if (name === 'organ') {
+          // Organ: Octave Sawtooths + Full Sustain + Reverb
+          vco1.oscillator.type = 'sawtooth';
+          vco2.oscillator.type = 'sawtooth';
+          
+          // Octave spread
+          // Max Detune is 1200 cents (1 Octave)
+          vco2.setKnobValue('DETUNE', 1200); 
+          // Slight detune on VCO1 for chorus feel
+          vco1.setKnobValue('DETUNE', 5);
+
+          // Audio Path
+          patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vco2.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+          patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
+          patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+
+          // Control
+          patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
+          patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
+          
+          patchManager.connect(kb.getJack('GATE'), adsr.getJack('GATE'));
+          patchManager.connect(adsr.getJack('OUT'), vca.getJack('CV'));
+
+          // Settings
+          // Organ Envelope: Instant On, Full Sustain, Quick Release
+          adsr.setKnobValue('A', 0.05);
+          adsr.setKnobValue('D', 0);
+          adsr.setKnobValue('S', 1.0);
+          adsr.setKnobValue('R', 0.1);
+
+          // Filter: Slightly closed to tame harsh saws
+          vcf.setKnobValue('FREQ', 1500); 
+          vcf.setKnobValue('RES', 1);
+
+          // Church Reverb
+          reverb.setKnobValue('MIX', 0.5);
+          reverb.setKnobValue('TIME', 3.0);
       }
     } catch (e) {
       console.error("Patch load error", e);

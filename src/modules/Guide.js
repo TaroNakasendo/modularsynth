@@ -25,33 +25,43 @@ export class Guide extends BaseModule {
         <li><strong>パッチ接続:</strong> OUTジャックからINジャックへドラッグ＆ドロップ。</li>
         <li><strong>切断:</strong> ジャックをクリックすると接続が解除されます。</li>
         <li><strong>ノブ操作:</strong> 上下にドラッグして値を調整します。</li>
+        <li><strong>プリセット:</strong> 上部ボタンでGun, Organ, Dub Sirenなどを切り替え。</li>
       </ul>
       
       <h4>モジュール解説</h4>
       <ul>
-        <li><strong>Keyboard:</strong> 鍵盤やPCキーボード(Z,X,C...)で演奏。Pitch(CV)とGateを出力。</li>
+        <li><strong>Keyboard:</strong> 演奏入力モジュール。
+          <ul>
+            <li>KEY: PCキーボード (Z,S,X...下段, Q,2,W...上段) 対応。</li>
+            <li>ARP: アルペジエーター。押した和音を分散して再生。</li>
+            <li>HOLD: 鍵盤を離しても音を持続。</li>
+            <li>OCT +/-: オクターブ変更 (-3 ～ +3)。</li>
+          </ul>
+        </li>
         <li><strong>Sequencer:</strong> 8ステップシーケンサー。スライダーで音程設定。</li>
-        <li><strong>VCO:</strong> オシレーター（音源）。V/OCTで音程制御。</li>
-        <li><strong>LFO:</strong> 低周波オシレーター。ビブラートや揺らぎに使用。</li>
-        <li><strong>Noise:</strong> ホワイト/ピンクノイズ。風の音やパーカッションに。</li>
-        <li><strong>ADSR:</strong> エンベロープ。音の時間変化（立ち上がりや余韻）を作る。</li>
-        <li><strong>VCF:</strong> フィルター。音の明るさを調整。CVやENVで動きをつける。</li>
+        <li><strong>VCO:</strong> オシレーター。音の発生源。V/OCT入力で音程制御。</li>
+        <li><strong>LFO:</strong> 低周波オシレーター。ビブラートや変調に使用。</li>
+        <li><strong>Noise:</strong> ホワイト/ピンクノイズ。</li>
+        <li><strong>ADSR:</strong> エンベロープジェネレーター。
+          <ul>
+            <li>A (Attack): 音の立ち上がり時間。</li>
+            <li>D (Decay): 最大音量からSustainレベルに下がるまでの時間。</li>
+            <li>S (Sustain): 鍵盤を押している間の音量レベル。</li>
+            <li>R (Release): 鍵盤を離した後の余韻時間。</li>
+          </ul>
+        </li>
+        <li><strong>VCF:</strong> フィルター。音の明るさを削る。ENV入力でワウ効果。</li>
         <li><strong>VCA:</strong> アンプ。音量を制御。GATEやADSRで開閉する。</li>
-        <li><strong>Delay / Reverb:</strong> エコーと残響効果。</li>
-        <li><strong>Vocoder:</strong> ボコーダー。マイクの声でシンセを歌わせる。'Mic'ボタンで有効化。</li>
+        <li><strong>Delay / Reverb:</strong> 空間系エフェクト。</li>
+        <li><strong>Vocoder:</strong> ボコーダー。マイク入力でシンセを喋らせる。</li>
       </ul>
-      
-
 
       <h4>ジャック解説 (Jacks)</h4>
       <ul>
-        <li><strong>CV (Control Voltage):</strong> 音程や各種パラメータを制御する電圧。例: KeyboardのCV出力でVCOの音程を動かす。</li>
-        <li><strong>GATE:</strong> 鍵盤を押している間だけ電圧が出るジャック。VCAやADSRをトリガーする。</li>
-        <li><strong>V/OCT:</strong> 1ボルトで1オクターブ変化するピッチ入力。CVをここにつなぐ。</li>
-        <li><strong>FM:</strong> Frequency Modulation。音程を揺らす（ビブラート）入力。</li>
-        <li><strong>ENV:</strong> Envelope。ADSRからの信号でフィルターなどを時間変化させる入力。</li>
-        <li><strong>CARRIER:</strong> [Vocoder] 声で変調される「素材の音」（シンセ音）を入力する。</li>
-        <li><strong>MOD:</strong> [Vocoder] 声の代わりになる変調入力。マイクを使わない場合にリズムマシンなどをつなぐ。</li>
+        <li><strong>CV / V/OCT:</strong> 音程制御電圧。1V = 1オクターブ。</li>
+        <li><strong>GATE:</strong> 発音信号。押している間ON。</li>
+        <li><strong>ENV:</strong> エンベロープ入力。フィルターやピッチを時間変化させる。</li>
+        <li><strong>FM:</strong> 周波数変調。ビブラートなど。</li>
       </ul>
       
       <p style="text-align: center; margin-top: 20px; color: #666; font-size: 0.8rem;">
@@ -66,7 +76,5 @@ export class Guide extends BaseModule {
     // Append custom content wrapper
     // We insert it after header
     this.element.appendChild(content);
-    
-    // We can add a "Close" jack? No need.
   }
 }

@@ -64,6 +64,42 @@ export class Keyboard extends BaseModule {
         }
     }, 'hold-btn');
     
+    // Octave Controls
+    this.octave = 0;
+    
+    const octRow = document.createElement('div');
+    octRow.style.display = 'flex';
+    octRow.style.justifyContent = 'space-between';
+    octRow.style.width = '100%';
+    octRow.style.marginTop = '10px';
+    
+    const createOctBtn = (label, diff) => {
+        const btn = document.createElement('div');
+        btn.className = 'button';
+        btn.innerText = label;
+        btn.style.width = '45%';
+        btn.style.padding = '5px';
+        btn.style.background = '#444';
+        btn.style.textAlign = 'center';
+        btn.style.cursor = 'pointer';
+        btn.style.borderRadius = '4px';
+        btn.style.fontSize = '0.7em';
+        btn.style.userSelect = 'none';
+        btn.style.border = '1px solid #222';
+        
+        btn.onclick = () => {
+            this.octave += diff;
+            // Clamp? -3 to +3
+            this.octave = Math.max(-3, Math.min(3, this.octave));
+            this.display.innerText = `OCT: ${this.octave}`;
+        };
+        return btn;
+    };
+    
+    octRow.appendChild(createOctBtn('OCT -', -1));
+    octRow.appendChild(createOctBtn('OCT +', 1));
+    this.controlsContainer.appendChild(octRow);
+    
     // Rate Control
     this.rateParam = this.context.createGain().gain;
     this.addKnob('RATE', this.rateParam, 1, 15, 5);
@@ -310,7 +346,7 @@ export class Keyboard extends BaseModule {
       // Manual play: Highest note priority (since array is sorted)
       const lastKey = this.activeKeys[this.activeKeys.length - 1];
       const semitone = this.keyMap[lastKey];
-      const volts = semitone / 12;
+      const volts = (semitone / 12) + this.octave;
       
       this.cvNode.offset.cancelScheduledValues(this.context.currentTime);
       this.cvNode.offset.setValueAtTime(volts, this.context.currentTime);
@@ -318,7 +354,7 @@ export class Keyboard extends BaseModule {
       if (this.gateNode.offset.value === 0) {
         this.gateNode.offset.setValueAtTime(1, this.context.currentTime);
       }
-      this.display.innerText = `NOTE: ${semitone}`;
+      this.display.innerText = `NOTE: ${semitone} (${this.octave > 0 ? '+' : ''}${this.octave})`;
     } else {
       this.gateNode.offset.cancelScheduledValues(this.context.currentTime);
       this.gateNode.offset.setValueAtTime(0, this.context.currentTime);
@@ -379,7 +415,7 @@ export class Keyboard extends BaseModule {
 
       const key = this.activeKeys[this.arpIndex];
       const semitone = this.keyMap[key];
-      const volts = semitone / 12;
+      const volts = (semitone / 12) + this.octave;
 
       const now = this.context.currentTime;
       this.cvNode.offset.cancelScheduledValues(now);
@@ -390,6 +426,6 @@ export class Keyboard extends BaseModule {
       this.gateNode.offset.setValueAtTime(1, now);
       this.gateNode.offset.setValueAtTime(0, now + (this.arpRate/1000)*0.5); // 50% duty
       
-      this.display.innerText = `ARP: ${semitone}`;
+      this.display.innerText = `ARP: ${semitone} (${this.octave > 0 ? '+' : ''}${this.octave})`;
   }
 }
