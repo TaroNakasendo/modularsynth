@@ -147,13 +147,13 @@ const appStart = () => {
     const output = modules[12];
 
     // Reset parameters
-    vco1.oscillator.detune.value = 0;
-    vco2.oscillator.detune.value = 0;
+    vco1.setKnobValue('DETUNE', 0);
+    vco2.setKnobValue('DETUNE', 0);
     vco1.oscillator.type = 'sawtooth';
     vco2.oscillator.type = 'sawtooth';
     
     // Reset VCA (Silence by default, let Env/Gate open it)
-    vca.gainNode.gain.value = 0;
+    vca.setKnobValue('GAIN', 0);
 
     // IMPORTANT: Reset VCA gain to 0 for Envelope control, or 1 for Drone
     // We'll set it in the specific presets.
@@ -165,7 +165,7 @@ const appStart = () => {
           patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
           
           // Detune VCO2 for thick sound
-          vco2.oscillator.detune.value = 10; 
+          vco2.setKnobValue('DETUNE', 10); 
 
           // Audio Chain
           patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
@@ -183,7 +183,7 @@ const appStart = () => {
           // Single Osc, Low Filter
           vco1.oscillator.type = 'square';
           vco2.oscillator.type = 'sawtooth';
-          vco2.oscillator.detune.value = -1200; // Sub osc
+          vco2.setKnobValue('DETUNE', -1200); // Sub osc
 
           patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
           patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
@@ -222,24 +222,24 @@ const appStart = () => {
           
           // Settings
           vco1.oscillator.type = 'sawtooth';
-          vco1.oscillator.detune.value = 0;
+          vco1.setKnobValue('DETUNE', 0);
           
           // Pluck Envelope
-          adsr.attack = 0.01;
-          adsr.decay = 0.2;
-          adsr.sustain = 0;
-          adsr.release = 0.2;
+          adsr.setKnobValue('A', 0.01);
+          adsr.setKnobValue('D', 0.2);
+          adsr.setKnobValue('S', 0);
+          adsr.setKnobValue('R', 0.2);
           
           // Filter - Low pass with resonance
-          vcf.filter.frequency.value = 400;
-          vcf.filter.Q.value = 8;
+          vcf.setKnobValue('FREQ', 400);
+          vcf.setKnobValue('RES', 8);
           
           // Delay
-          delay.setMix(0.4);
-          delay.delayNode.delayTime.value = 0.3;
+          delay.setKnobValue('MIX', 0.4);
+          delay.setKnobValue('TIME', 0.3);
           
           // Run Sequencer
-          seq.tempo = 200;
+          seq.setKnobValue('RATE', 200);
           // Set a pattern (Audio only, UI won't update until we improve Sequencer module)
           seq.setSteps([0, 12, 3, 7, 0, 10, 5, 12]);
           
@@ -258,24 +258,24 @@ const appStart = () => {
            patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
            
            // Settings
-           lfo.oscillator.frequency.value = 0.2; // Slow wind
-           vcf.filter.frequency.value = 600;
-           vcf.filter.Q.value = 20; // Whistling
-           vca.gainNode.gain.value = 0.7;
+           lfo.setKnobValue('RATE', 0.2); // Slow wind
+           vcf.setKnobValue('FREQ', 600);
+           vcf.setKnobValue('RES', 20); // Whistling
+           vca.setKnobValue('GAIN', 0.7);
            
            // Big Reverb
-           reverb.generateImpulse(5);
-           reverb.updateMix(0.6);
+           reverb.setKnobValue('TIME', 5);
+           reverb.setKnobValue('MIX', 0.6);
       } else if (name === 'vocoder') {
            // Vocoder Setup
            // Carrier: VCO1 + VCO2 (Sawtooth for rich harmonics)
            vco1.oscillator.type = 'sawtooth';
            vco2.oscillator.type = 'sawtooth';
-           vco1.oscillator.frequency.value = 110; // Low A
-           vco2.oscillator.frequency.value = 112; // Detuned
+           vco1.setKnobValue('FREQ', 110); // Low A
+           vco2.setKnobValue('FREQ', 112); // Detuned
            // Set detune back to 0 just in case
-           vco1.oscillator.detune.value = 0;
-           vco2.oscillator.detune.value = 0;
+           vco1.setKnobValue('DETUNE', 0);
+           vco2.setKnobValue('DETUNE', 0);
            
            // Keyboard control
            patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
@@ -296,7 +296,7 @@ const appStart = () => {
           // Solo Lead: Dual Oscillator with Delay/Reverb
           vco1.oscillator.type = 'sawtooth';
           vco2.oscillator.type = 'square';
-          vco2.oscillator.detune.value = 5; // Slight detune
+          vco2.setKnobValue('DETUNE', 5); // Slight detune
 
           // Pitch Control
           patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
@@ -317,17 +317,17 @@ const appStart = () => {
           patchManager.connect(adsr.getJack('OUT'), vcf.getJack('ENV'));
 
           // Settings
-          adsr.attack = 0.05;
-          adsr.decay = 0.3;
-          adsr.sustain = 0.4;
-          adsr.release = 0.5;
+          adsr.setKnobValue('A', 0.05);
+          adsr.setKnobValue('D', 0.3);
+          adsr.setKnobValue('S', 0.4);
+          adsr.setKnobValue('R', 0.5);
 
-          vcf.filter.frequency.value = 800;
-          vcf.filter.Q.value = 5;
+          vcf.setKnobValue('FREQ', 800);
+          vcf.setKnobValue('RES', 5);
 
-          delay.setMix(0.3);
-          delay.delayNode.delayTime.value = 0.4;
-          reverb.updateMix(0.3);
+          delay.setKnobValue('MIX', 0.3);
+          delay.setKnobValue('TIME', 0.4);
+          reverb.setKnobValue('MIX', 0.3);
 
       } else if (name === 'helicopter') {
           // Helicopter: Noise -> VCF -> VCA -> Out
@@ -345,15 +345,15 @@ const appStart = () => {
 
           // Settings
           lfo.oscillator.type = 'sawtooth'; // Sharp chop
-          lfo.oscillator.frequency.value = 6; // Rotor speed
+          lfo.setKnobValue('RATE', 6); // Rotor speed
           
-          vcf.filter.frequency.value = 200; // Low rumble
-          vcf.filter.Q.value = 5;
+          vcf.setKnobValue('FREQ', 200); // Low rumble
+          vcf.setKnobValue('RES', 5);
           
           // VCA Gain: We want it to go from 0 to 1 with LFO.
           // If LFO is -1 to 1:
           // VCA Gain 0.5? 
-          vca.gainNode.gain.value = 0.5;
+          vca.setKnobValue('GAIN', 0.5);
 
           // Reverb for distance
           // patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
@@ -365,7 +365,7 @@ const appStart = () => {
            
           patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
           patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
-          reverb.updateMix(0.1);
+          reverb.setKnobValue('MIX', 0.1);
 
       } else if (name === 'siren') {
           // Dub Siren: LFO Modulating VCO Pitch
@@ -382,9 +382,9 @@ const appStart = () => {
 
           // Settings
           lfo.oscillator.type = 'triangle';
-          lfo.oscillator.frequency.value = 1; // 1Hz Siren
+          lfo.setKnobValue('RATE', 1); // 1Hz Siren
           
-          vca.gainNode.gain.value = 1; // Needed? LFO modulates CV, but VCA might need base gain? 
+          vca.setKnobValue('GAIN', 1); // Needed? LFO modulates CV, but VCA might need base gain? 
           // Actually VCA is usually 0 and opened by CV. If CV is LFO (-1 to 1 or 0 to 1?), we might need offset or just rely on positive swing.
           // Assuming LFO outputs -1 to 1?
           // Let's set VCA gain to 0.5 to allow modulation around it if we were summing, but here we are patching to CV.
@@ -392,15 +392,15 @@ const appStart = () => {
           // If LFO is bipolar, VCA might cut out. Let's just rely on the user experimenting or set a basic gate if needed.
           // Let's use a constant high pitch tone modulated by LFO.
           
-          vco1.oscillator.frequency.value = 600;
+          vco1.setKnobValue('FREQ', 600);
           
-          delay.setMix(0.4);
-          delay.delayNode.delayTime.value = 0.25;
-          delay.feedbackGain.gain.value = 0.7;
+          delay.setKnobValue('MIX', 0.4);
+          delay.setKnobValue('TIME', 0.25);
+          delay.setKnobValue('FB', 0.7);
       } else if (name === 'kick') {
           // Kick: Sine Wave + Pitch Env + Amp Env
           vco1.oscillator.type = 'sine';
-          vco1.oscillator.frequency.value = 50; 
+          vco1.setKnobValue('FREQ', 50); 
           
           // Audio Path
           patchManager.connect(vco1.getJack('OUT'), vca.getJack('IN'));
@@ -417,10 +417,10 @@ const appStart = () => {
           patchManager.connect(adsr.getJack('OUT'), vco1.getJack('V/OCT'));
           
           // Settings
-          adsr.attack = 0.001;
-          adsr.decay = 0.2;
-          adsr.sustain = 0;
-          adsr.release = 0.1;
+          adsr.setKnobValue('A', 0.001);
+          adsr.setKnobValue('D', 0.2);
+          adsr.setKnobValue('S', 0);
+          adsr.setKnobValue('R', 0.1);
       }
     } catch (e) {
       console.error("Patch load error", e);

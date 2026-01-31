@@ -20,6 +20,7 @@ export class BaseModule {
     this.jacksContainer = this.element.querySelector('.jack-container');
     
     this.jacks = {}; // Registry of jacks { id: { type, node, param } }
+    this.knobUpdaters = {}; // Registry for updating knobs from valid code
   }
 
   mount(parent) {
@@ -60,6 +61,20 @@ export class BaseModule {
     };
     updateVisuals();
 
+    // Register updater
+    this.knobUpdaters[label] = (val) => {
+        currentVal = Math.max(min, Math.min(max, val));
+        if (param) {
+            // Instant update for presets
+            param.value = currentVal;
+            param.setValueAtTime(currentVal, this.context.currentTime);
+        }
+        updateVisuals();
+        
+        // Trigger callback if defined (important for non-AudioParam knobs like ADSR or Mix)
+        if (this.onKnobChange) this.onKnobChange(label, currentVal); 
+    };
+
     knob.addEventListener('mousedown', (e) => {
       isDragging = true;
       startY = e.clientY;
@@ -95,6 +110,12 @@ export class BaseModule {
     });
 
     return knob;
+  }
+
+  setKnobValue(label, value) {
+      if (this.knobUpdaters[label]) {
+          this.knobUpdaters[label](value);
+      }
   }
 
   // Add a Jack (Input or Output)
