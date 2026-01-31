@@ -15,13 +15,22 @@ import { Delay } from './modules/Delay.js';
 import { Vocoder } from './modules/Vocoder.js';
 import { PatchManager } from './core/PatchManager.js';
 
-const appStart = () => {
+const appStart = async () => {
   const rackEl = document.getElementById('rack');
   const canvasEl = document.getElementById('cable-canvas');
 
   
   // Audio Context
   const audioCtx = getAudioContext();
+
+  // Load Worklets
+  try {
+      // In Vite dev, direct path usually works. In build, might need ?url import.
+      // For now, assuming dev server serves /src/...
+      await audioCtx.audioWorklet.addModule('/src/worklets/gate-processor.js');
+  } catch(e) {
+      console.warn("AudioWorklet load failed, fallback might be needed", e);
+  }
   
   // Patch Manager
   const patchManager = new PatchManager(canvasEl, audioCtx);
@@ -135,17 +144,48 @@ const appStart = () => {
     const vocoder = modules[11];
     const output = modules[12];
 
-    // Reset parameters
-    vco1.setKnobValue('DETUNE', 0);
-    vco2.setKnobValue('DETUNE', 0);
-    vco1.oscillator.type = 'sawtooth';
-    vco2.oscillator.type = 'sawtooth';
+    // --- RESET ALL MODULES TO DEFAULTS ---
+    // This prevents state (like Reverb Mix, Filter Res) from bleeding into other presets.
     
-    // Reset VCA (Silence by default, let Env/Gate open it)
+    // VCOs
+    [vco1, vco2].forEach(vco => {
+        vco.setKnobValue('FREQ', 440);
+        vco.setKnobValue('DETUNE', 0);
+        vco.oscillator.type = 'sawtooth'; 
+        // Note: UI Button text might desync, but sound is priority.
+    });
+
+    // LFO
+    lfo.setKnobValue('RATE', 1);
+    lfo.oscillator.type = 'sine';
+
+    // Filter
+    vcf.setKnobValue('FREQ', 2000); // Open
+    vcf.setKnobValue('RES', 1);     // No interaction
+
+    // VCA
     vca.setKnobValue('GAIN', 0);
 
-    // IMPORTANT: Reset VCA gain to 0 for Envelope control, or 1 for Drone
-    // We'll set it in the specific presets.
+    // ADSR
+    adsr.setKnobValue('A', 0.01);
+    adsr.setKnobValue('D', 0.1);
+    adsr.setKnobValue('S', 0.5);
+    adsr.setKnobValue('R', 0.3);
+
+    // Effects - DRY!
+    delay.setKnobValue('MIX', 0); 
+    delay.setKnobValue('TIME', 0.3);
+    delay.setKnobValue('FB', 0);
+    
+    reverb.setKnobValue('MIX', 0);
+    
+    // Noise
+    noise.setNoiseType(false); // White
+
+    // Sequencer - Stop to save CPU/Confusion? 
+    // We can't easily click the button without ID or Ref, but logic is fine.
+    
+    // -------------------------------------
     
     try {
       if (name === 'default') {
@@ -166,13 +206,17 @@ const appStart = () => {
 
           // Gate & Mod
           patchManager.connect(kb.getJack('GATE'), vca.getJack('CV'));
-          // patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV')); // Removed LFO mod for stability 
+          
+          // Slight Reverb for polish
+          reverb.setKnobValue('MIX', 0.2); 
       
       } else if (name === 'bass') {
           // Single Osc, Low Filter
           vco1.oscillator.type = 'square';
+          
+          // Sub osc
           vco2.oscillator.type = 'sawtooth';
-          vco2.setKnobValue('DETUNE', -1200); // Sub osc
+          vco2.setKnobValue('DETUNE', -1200); 
 
           patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
           patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
@@ -184,14 +228,19 @@ const appStart = () => {
           patchManager.connect(vca.getJack('OUT'), output.getJack('IN')); // Dry bass
 
           patchManager.connect(kb.getJack('GATE'), vca.getJack('CV'));
-          // Envelope on filter would be nice but we only have LFO for now
-          // So just static low pass or LFO wobble
+          
+          vcf.setKnobValue('FREQ', 600);
       
       } else if (name === 'scifi') {
           // LFO -> Pitch
           patchManager.connect(lfo.getJack('OUT'), vco1.getJack('V/OCT'));
           patchManager.connect(vco1.getJack('OUT'), reverb.getJack('IN'));
           patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+          
+          // SciFi Reverb
+          reverb.setKnobValue('MIX', 0.5);
+          lfo.setKnobValue('RATE', 0.5);
+
       } else if (name === 'sequencer') {
           // Sequencer -> VCO1 Pitch
           patchManager.connect(seq.getJack('CV'), vco1.getJack('V/OCT'));
@@ -226,6 +275,7 @@ const appStart = () => {
           // Delay
           delay.setKnobValue('MIX', 0.4);
           delay.setKnobValue('TIME', 0.3);
+          delay.setKnobValue('FB', 0.4);
           
           // Run Sequencer
           seq.setKnobValue('RATE', 200);
@@ -326,7 +376,10 @@ const appStart = () => {
           // Audio Path
           patchManager.connect(noise.getJack('OUT'), vcf.getJack('IN'));
           patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
-          patchManager.connect(vca.getJack('OUT'), output.getJack('IN'));
+          // Slight Reverb
+          patchManager.disconnect(vca.getJack('OUT')); // Disconnect direct out
+          patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
+          patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
           
           // Modulation
           patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV'));
@@ -339,21 +392,8 @@ const appStart = () => {
           vcf.setKnobValue('FREQ', 200); // Low rumble
           vcf.setKnobValue('RES', 5);
           
-          // VCA Gain: We want it to go from 0 to 1 with LFO.
-          // If LFO is -1 to 1:
-          // VCA Gain 0.5? 
           vca.setKnobValue('GAIN', 0.5);
 
-          // Reverb for distance
-          // patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
-          // patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
-          // reverb.updateMix(0.2);
-          // Let's keep it dry and loud for clarity first, or maybe subtle reverb
-          // Let's add slight reverb for realism
-          patchManager.disconnect(vca.getJack('OUT')); // Disconnect direct out
-           
-          patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
-          patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
           reverb.setKnobValue('MIX', 0.1);
 
       } else if (name === 'siren') {
@@ -373,13 +413,7 @@ const appStart = () => {
           lfo.oscillator.type = 'triangle';
           lfo.setKnobValue('RATE', 1); // 1Hz Siren
           
-          vca.setKnobValue('GAIN', 1); // Needed? LFO modulates CV, but VCA might need base gain? 
-          // Actually VCA is usually 0 and opened by CV. If CV is LFO (-1 to 1 or 0 to 1?), we might need offset or just rely on positive swing.
-          // Assuming LFO outputs -1 to 1?
-          // Let's set VCA gain to 0.5 to allow modulation around it if we were summing, but here we are patching to CV.
-          // In this synth, patching to CV usually controls the gain directly. 
-          // If LFO is bipolar, VCA might cut out. Let's just rely on the user experimenting or set a basic gate if needed.
-          // Let's use a constant high pitch tone modulated by LFO.
+          vca.setKnobValue('GAIN', 1); 
           
           vco1.setKnobValue('FREQ', 600);
           

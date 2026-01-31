@@ -22,31 +22,41 @@ export class ADSR extends BaseModule {
     this.gateInput.gain.value = 1;
 
     // Processor to watch for Gate signals
-    // Buffer size 256 is low latency enough for control defaults
-    this.processor = this.context.createScriptProcessor(256, 1, 1);
-    this.gateInput.connect(this.processor);
-    this.processor.connect(this.context.destination); // Keep it alive
+    // Try AudioWorklet first
+    try {
+        this.processor = new AudioWorkletNode(this.context, 'gate-processor');
+        this.processor.port.onmessage = (e) => {
+            if (e.data === 'trigger') this.triggerAttack();
+            if (e.data === 'release') this.triggerRelease();
+        };
+        this.gateInput.connect(this.processor);
+        this.processor.connect(this.context.destination); // Keep alive
+    } catch(e) {
+        console.warn("AudioWorklet 'gate-processor' not found, falling back to ScriptProcessor. Warning: ScriptProcessor is deprecated.");
+        // Fallback: ScriptProcessor
+        this.processor = this.context.createScriptProcessor(256, 1, 1);
+        this.gateInput.connect(this.processor);
+        this.processor.connect(this.context.destination); 
 
-    this.lastGate = 0;
-    this.processor.onaudioprocess = (e) => {
-      const input = e.inputBuffer.getChannelData(0);
-      // Check average or max of buffer?
-      // Since it's CV, first sample is usually enough or average
-      let currentGate = 0;
-      for(let i=0; i<input.length; i++) {
-          if(input[i] > 0.5) {
-              currentGate = 1;
-              break;
+        this.lastGate = 0;
+        this.processor.onaudioprocess = (e) => {
+          const input = e.inputBuffer.getChannelData(0);
+          let currentGate = 0;
+          for(let i=0; i<input.length; i++) {
+              if(input[i] > 0.5) {
+                  currentGate = 1;
+                  break;
+              }
           }
-      }
 
-      if (currentGate === 1 && this.lastGate === 0) {
-        this.triggerAttack();
-      } else if (currentGate === 0 && this.lastGate === 1) {
-        this.triggerRelease();
-      }
-      this.lastGate = currentGate;
-    };
+          if (currentGate === 1 && this.lastGate === 0) {
+            this.triggerAttack();
+          } else if (currentGate === 0 && this.lastGate === 1) {
+            this.triggerRelease();
+          }
+          this.lastGate = currentGate;
+        };
+    }
 
     // Display / LED
     this.led = document.createElement('div');

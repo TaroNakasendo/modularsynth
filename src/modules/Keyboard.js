@@ -329,4 +329,51 @@ export class Keyboard extends BaseModule {
       this.display.innerText = 'OFF';
     }
   }
+
+  // Arpeggiator Logic
+  startArp() {
+      if (this.arpInterval) clearInterval(this.arpInterval);
+      this.arpInterval = setInterval(() => this.arpTick(), this.arpRate);
+  }
+
+  stopArp() {
+      if (this.arpInterval) clearInterval(this.arpInterval);
+      this.arpInterval = null;
+      // Silence
+      this.gateNode.offset.setTargetAtTime(0, this.context.currentTime, 0.01);
+  }
+
+  restartArp() {
+      if (this.isArpOn) {
+          this.startArp();
+      }
+  }
+
+  arpTick() {
+      if (this.activeKeys.length === 0) {
+          // Silence
+          this.gateNode.offset.setTargetAtTime(0, this.context.currentTime, 0.01);
+          return;
+      }
+
+      this.arpIndex = (this.arpIndex + 1) % this.activeKeys.length;
+      const key = this.activeKeys[this.arpIndex];
+      const semitone = this.keyMap[key];
+      const volts = semitone / 12;
+
+      const now = this.context.currentTime;
+      this.cvNode.offset.cancelScheduledValues(now);
+      this.cvNode.offset.setValueAtTime(volts, now);
+
+      // Gate Trig
+      this.gateNode.offset.cancelScheduledValues(now);
+      this.gateNode.offset.setValueAtTime(1, now);
+      this.gateNode.offset.setValueAtTime(0, now + (this.arpRate/1000)*0.5); // 50% duty
+      
+      this.display.innerText = `ARP: ${semitone}`;
+      
+      // Visual feedback on keys?
+      // We could flash the key corresponding to current arp note
+      // But we already highlight activeKeys (held keys).
+  }
 }
