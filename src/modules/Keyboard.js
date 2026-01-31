@@ -178,12 +178,8 @@ export class Keyboard extends BaseModule {
       }
       
       // Update Visuals
-      // Only turn off if not latched or if latched logic allows?
-      // Visuals should reflect "Physical" State mostly, or Active State?
-      // Let's reflect Active State for feedback
-      if (!this.activeKeys.includes(key)) {
-          this.updateVirtualKey(key, false);
-      }
+      // Always turn off visual representation on key up to reflect physical state
+      this.updateVirtualKey(key, false);
   }
 
   updateVirtualKey(key, isActive) {
