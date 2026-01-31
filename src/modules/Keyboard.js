@@ -284,7 +284,7 @@ export class Keyboard extends BaseModule {
       btn.addEventListener('mousedown', down);
       btn.addEventListener('mouseup', up);
       btn.addEventListener('mouseleave', up); 
-      btn.addEventListener('touchstart', down);
+      btn.addEventListener('touchstart', down, { passive: false });
       btn.addEventListener('touchend', up);
       
       return btn;

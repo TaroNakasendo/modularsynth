@@ -258,6 +258,7 @@ button.active {
   font-size: 0.8rem;
   cursor: pointer;
   user-select: none;
+  touch-action: none;
   box-sizing: border-box;
   transition: all 0.1s;
 }
