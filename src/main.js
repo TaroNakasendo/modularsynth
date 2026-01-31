@@ -191,7 +191,8 @@ const appStart = () => {
       if (audioCtx.state === 'suspended') {
         resumeAudioContext();
         startBtn.innerText = 'Audio Active';
-        startBtn.disabled = true;
+        startBtn.classList.add('active');
+        // startBtn.disabled = true; // Removed to allow toggling off
       }
       loadPreset(preset);
     });
