@@ -28,21 +28,21 @@ body {
   justify-content: center;
 }
 
-#synth-case {
+/* Outer Shell with Frame and Cheeks */
+#case-shell {
   position: relative;
   background-color: var(--case-color);
   border: 20px solid #222;
   border-radius: 10px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  padding: 10px;
   width: 90vw;
   height: 80vh;
+  box-sizing: border-box;
   display: flex;
-  overflow: auto; /* Allow scrolling if rack is wide */
 }
 
-/* Wood cheeks texture simulation */
-#synth-case::before, #synth-case::after {
+/* Wood cheeks attached to the Shell */
+#case-shell::before, #case-shell::after {
   content: '';
   position: absolute;
   top: -20px;
@@ -51,25 +51,36 @@ body {
   background: #5d4037; /* Wood color */
   border-radius: 4px;
 }
-#synth-case::before { left: -40px; }
-#synth-case::after { right: -40px; }
+#case-shell::before { left: -40px; }
+#case-shell::after { right: -40px; }
+
+/* Inner Scrollable Area */
+#synth-case {
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  position: relative; /* For canvas context */
+  
+  /* Standard Scrollbar Styling */
+  scrollbar-width: thin;
+  scrollbar-color: #444 #0f0f0f;
+}
 
 #rack {
   display: flex;
   gap: 2px;
   height: 100%;
   position: relative;
-  z-index: 10; /* Below canvas, canvas needs to be on top for cables... wait. */
-  /* Actually, jacks need to be clickable. Canvas usually goes on top with pointer-events: none, 
-     but then we can't drag cables. 
-     Better: Canvas on top, pointer-events: none. 
-     We handle drag on global window, calculating start/end from JACK positions. 
-     OR: Canvas is transparent and z-index 100. dragging logic checks coordinates? 
-     Standard web app approach: Canvas behind jacks? No, cables go OVER knobs. 
-     Canvas on top with pointer-events: none. Jacks have event listeners. 
-     When dragging starts from a jack, we track mouse on window. 
-  */
+  z-index: 10;
+  padding: 0 10px; /* Horizontal padding only, modules touch top/bottom/scrollbar */
+  box-sizing: border-box;
+  min-width: max-content;
+  align-items: center; /* Center modules vertically if they have margins, or let them stretch? */
+  /* Actually standard rack: modules full height. */
 }
+
 
 #cable-canvas {
   position: absolute;
@@ -86,7 +97,9 @@ body {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   width: 120px;
-  height: 100%;
+  height: calc(100% - 20px); /* Leave room for "rails" */
+  margin-top: 10px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
   padding: 15px 10px;
