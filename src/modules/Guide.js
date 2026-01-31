@@ -41,19 +41,7 @@ export class Guide extends BaseModule {
         <li><strong>Vocoder:</strong> ボコーダー。マイクの声でシンセを歌わせる。'Mic'ボタンで有効化。</li>
       </ul>
       
-      <h4>プリセット (Presets)</h4>
-      <p>画面上部のボタンでパッチを呼び出せます。</p>
-      <ul>
-        <li><strong>Default:</strong> 基本的なシンセリード。</li>
-        <li><strong>Fat Bass:</strong> 重厚なベースサウンド。</li>
-        <li><strong>Sci-Fi:</strong> SFチックな効果音。</li>
-        <li><strong>Sequencer:</strong> 自動演奏ループ。</li>
-        <li><strong>Wind:</strong> 風の音（環境音）。</li>
-        <li><strong>Vocoder:</strong> ロボットボイス体験。</li>
-        <li><strong>Solo Lead:</strong> エフェクトのかかったリード音。</li>
-        <li><strong>Helicopter:</strong> ヘリコプターの回転音。</li>
-        <li><strong>Dub Siren:</strong> レゲエ/ダブで使われるサイレン音。</li>
-      </ul>
+
 
       <h4>ジャック解説 (Jacks)</h4>
       <ul>
