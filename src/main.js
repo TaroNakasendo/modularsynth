@@ -9,6 +9,7 @@ import { Keyboard } from './modules/Keyboard.js';
 import { Reverb } from './modules/Reverb.js';
 import { Guide } from './modules/Guide.js';
 import { Sequencer } from './modules/Sequencer.js';
+import { Noise } from './modules/Noise.js';
 import { ADSR } from './modules/ADSR.js';
 import { Delay } from './modules/Delay.js';
 import { PatchManager } from './core/PatchManager.js';
@@ -31,6 +32,7 @@ const appStart = () => {
     new VCO(),
     new VCO(),
     new LFO(),
+    new Noise(),
     new ADSR(),
     new VCF(),
     new VCA(),
@@ -127,24 +129,28 @@ const appStart = () => {
     patchManager.clearAllPatches();
 
     // Module Indices based on instantiation order:
-    // 0: KB, 1: SEQ, 2: VCO1, 3: VCO2, 4: LFO, 5: ADSR, 6: VCF, 7: VCA, 8: DELAY, 9: REVERB, 10: GUIDE, 11: OUT
+    // 0: KB, 1: SEQ, 2: VCO1, 3: VCO2, 4: LFO, 5: NOISE, 6: ADSR, 7: VCF, 8: VCA, 9: DELAY, 10: REVERB, 11: GUIDE, 12: OUT
     const kb = modules[0];
     const seq = modules[1];
     const vco1 = modules[2];
     const vco2 = modules[3];
     const lfo = modules[4];
-    const adsr = modules[5];
-    const vcf = modules[6];
-    const vca = modules[7];
-    const delay = modules[8];
-    const reverb = modules[9];
-    const output = modules[11];
+    const noise = modules[5];
+    const adsr = modules[6];
+    const vcf = modules[7];
+    const vca = modules[8];
+    const delay = modules[9];
+    const reverb = modules[10];
+    const output = modules[12];
 
     // Reset parameters
     vco1.oscillator.detune.value = 0;
     vco2.oscillator.detune.value = 0;
     vco1.oscillator.type = 'sawtooth';
     vco2.oscillator.type = 'sawtooth';
+    
+    // Reset VCA (Silence by default, let Env/Gate open it)
+    vca.gainNode.gain.value = 0;
 
     // IMPORTANT: Reset VCA gain to 0 for Envelope control, or 1 for Drone
     // We'll set it in the specific presets.
@@ -168,7 +174,7 @@ const appStart = () => {
 
           // Gate & Mod
           patchManager.connect(kb.getJack('GATE'), vca.getJack('CV'));
-          patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV')); 
+          // patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV')); // Removed LFO mod for stability 
       
       } else if (name === 'bass') {
           // Single Osc, Low Filter
@@ -235,6 +241,28 @@ const appStart = () => {
           seq.setSteps([0, 12, 3, 7, 0, 10, 5, 12]);
           
           if (!seq.isRunning) seq.start();
+      } else if (name === 'wind') {
+           // Wind: Noise -> VCF -> VCA -> Reverb -> Out
+           noise.setNoiseType(true);
+           
+           patchManager.connect(noise.getJack('OUT'), vcf.getJack('IN'));
+           
+           // Modulate VCF
+           patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV'));
+           
+           patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+           patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
+           patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+           
+           // Settings
+           lfo.oscillator.frequency.value = 0.2; // Slow wind
+           vcf.filter.frequency.value = 600;
+           vcf.filter.Q.value = 20; // Whistling
+           vca.gainNode.gain.value = 0.7;
+           
+           // Big Reverb
+           reverb.generateImpulse(5);
+           reverb.updateMix(0.6);
       }
     } catch (e) {
       console.error("Patch load error", e);

@@ -18,8 +18,13 @@ export class VCF extends BaseModule {
     this.addJack('OUT', 'out', this.filter);
     
     // CV Mod
-    // Standard CV (Linear Hz, good for LFO)
-    this.addJack('CV', 'in', { param: this.filter.frequency });
+    // CV Mod
+    // Standard CV - Amplified to drive detune (1V/Oct emulation-ish)
+    // 1 LFO unit (±1) will drive ±2400 cents (±2 Octaves)
+    this.cvGain = this.context.createGain();
+    this.cvGain.gain.value = 2400; 
+    this.cvGain.connect(this.filter.detune);
+    this.addJack('CV', 'in', { node: this.cvGain });
 
     // Envelope Input (Exponential/Detune based, good for Sweep)
     // 0..1 input -> 0..3000 cents (2.5 octaves)
