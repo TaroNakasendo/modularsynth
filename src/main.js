@@ -444,6 +444,49 @@ const appStart = async () => {
           adsr.setKnobValue('D', 0.2);
           adsr.setKnobValue('S', 0);
           adsr.setKnobValue('R', 0.1);
+      } else if (name === 'gun') {
+          // Gun: Noise Burst + rapid pitch drop
+          noise.setNoiseType(true); // Pink noise for body
+          
+          vco1.oscillator.type = 'sawtooth';
+          vco1.setKnobValue('FREQ', 150);
+
+          // Audio Path: Mix Noise and VCO
+          patchManager.connect(noise.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
+          
+          patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+          
+          // Reverb for gunshot trail
+          patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
+          patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+
+          // Control
+          patchManager.connect(kb.getJack('GATE'), adsr.getJack('GATE'));
+
+          // Envelope Modulations
+          patchManager.connect(adsr.getJack('OUT'), vca.getJack('CV')); // Amp Envelope
+          patchManager.connect(adsr.getJack('OUT'), vcf.getJack('ENV')); // Filter Sweep
+          patchManager.connect(adsr.getJack('OUT'), vco1.getJack('V/OCT')); // Pitch Drop
+          
+          // Settings
+          // Sharp attack, short decay
+          adsr.setKnobValue('A', 0.001);
+          adsr.setKnobValue('D', 0.15); 
+          adsr.setKnobValue('S', 0);
+          adsr.setKnobValue('R', 0.2);
+
+          // Filter
+          vcf.setKnobValue('FREQ', 2000); // Start high
+          // ENV jack on VCF adds to freq, so we might want to start lower if we want sweep UP, 
+          // or start high and sweep? Actually VCF ENV input usually Modulates positive. 
+          // For Gun, we want the noise to be bright then dark?
+          // Let's set Filter default lower and let Env open it? 
+          // Or just open filter and let Noise be Noise.
+          // Let's rely on Reverb color.
+          
+          reverb.setKnobValue('MIX', 0.4);
+          reverb.setKnobValue('TIME', 2.0);
       }
     } catch (e) {
       console.error("Patch load error", e);
