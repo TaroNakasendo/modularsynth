@@ -27,6 +27,8 @@ export class Keyboard extends BaseModule {
 
     // Tracks currently pressed keys
     this.activeKeys = []; 
+    this.physicalKeys = [];
+    this.isLatchOn = false;
 
     // Arpeggiator State
     this.isArpOn = false;
@@ -48,6 +50,19 @@ export class Keyboard extends BaseModule {
             this.triggerNote();
         }
     }, 'arp-btn');
+
+    // UI: Hold Toggle
+    this.createButton('HOLD OFF', () => {
+        this.isLatchOn = !this.isLatchOn;
+        const btn = this.element.querySelector('.hold-btn');
+        btn.innerText = this.isLatchOn ? 'HOLD ON' : 'HOLD OFF';
+        btn.style.color = this.isLatchOn ? '#00ff00' : '#aaa';
+
+        if (!this.isLatchOn && this.physicalKeys.length === 0) {
+            this.activeKeys = [];
+            if (!this.isArpOn) this.triggerNote();
+        }
+    }, 'hold-btn');
     
     // Rate Control
     this.rateParam = this.context.createGain().gain;
@@ -177,6 +192,17 @@ export class Keyboard extends BaseModule {
       if (e.repeat) return;
       const key = e.key.toLowerCase();
       if (this.keyMap.hasOwnProperty(key)) {
+        
+        // Latch Logic: Start a new chord if hands were off
+        if (this.isLatchOn && this.physicalKeys.length === 0) {
+           this.activeKeys = [];
+           this.arpIndex = -1; 
+        }
+
+        if (!this.physicalKeys.includes(key)) {
+            this.physicalKeys.push(key);
+        }
+
         if (!this.activeKeys.includes(key)) {
           this.activeKeys.push(key);
           // Sort functionality for Up Arp
@@ -193,9 +219,20 @@ export class Keyboard extends BaseModule {
 
     window.addEventListener('keyup', (e) => {
       const key = e.key.toLowerCase();
-      if (this.activeKeys.includes(key)) {
-        this.activeKeys = this.activeKeys.filter(k => k !== key);
-        if (!this.isArpOn) this.triggerNote();
+      
+      // Update physical tracking
+      if (this.physicalKeys.includes(key)) {
+          this.physicalKeys = this.physicalKeys.filter(k => k !== key);
+      }
+
+      // Removal logic
+      // If Latch is ON, we NEVER remove keys on keyup. 
+      // They persist until a new key is pressed while hands are off.
+      if (!this.isLatchOn) {
+          if (this.activeKeys.includes(key)) {
+            this.activeKeys = this.activeKeys.filter(k => k !== key);
+            if (!this.isArpOn) this.triggerNote();
+          }
       }
     });
   }

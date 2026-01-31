@@ -95,11 +95,17 @@ const appStart = () => {
     }
   });
 
-  // Start Audio
+  // Start/Stop Audio
   startBtn.addEventListener('click', () => {
-    resumeAudioContext();
-    startBtn.innerText = 'Audio Active';
-    startBtn.disabled = true;
+    if (audioCtx.state === 'suspended') {
+        resumeAudioContext();
+        startBtn.innerText = 'Audio Active';
+        startBtn.classList.add('active');
+    } else if (audioCtx.state === 'running') {
+        audioCtx.suspend();
+        startBtn.innerText = 'Start Audio';
+        startBtn.classList.remove('active');
+    }
   });
 
   // Default Patch
