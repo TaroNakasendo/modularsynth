@@ -526,6 +526,46 @@ const appStart = async () => {
           // Church Reverb
           reverb.setKnobValue('MIX', 0.5);
           reverb.setKnobValue('TIME', 3.0);
+      } else if (name === 'piano') {
+          // Piano / Electric Piano
+          // Needs rich harmonics but filtered down quickly
+          
+          vco1.oscillator.type = 'sawtooth';
+          vco2.oscillator.type = 'square'; // Variable pulse width would be better, but square gives hollow sound
+          
+          vco2.setKnobValue('DETUNE', 5); // Slight detune for richness
+          
+          // Audio Path
+          patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vco2.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+          patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
+          patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+          
+          // Control
+          // Pitch
+          patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
+          patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
+          
+          // Envelopes
+          patchManager.connect(kb.getJack('GATE'), adsr.getJack('GATE'));
+          patchManager.connect(adsr.getJack('OUT'), vca.getJack('CV'));
+          patchManager.connect(adsr.getJack('OUT'), vcf.getJack('ENV')); // Modulate brightness
+          
+          // Settings 
+          // Percussive Envelope
+          adsr.setKnobValue('A', 0.01);
+          adsr.setKnobValue('D', 0.6); // Longer decay for piano string feel
+          adsr.setKnobValue('S', 0.0); // No sustain (or very low), piano strings decay naturally
+          adsr.setKnobValue('R', 0.4);
+          
+          // Filter: Start closed, Envelope opens it
+          vcf.setKnobValue('FREQ', 600); 
+          vcf.setKnobValue('RES', 2);
+          
+          // Reverb
+          reverb.setKnobValue('MIX', 0.25);
+          reverb.setKnobValue('TIME', 2.5);
       }
     } catch (e) {
       console.error("Patch load error", e);
