@@ -219,6 +219,7 @@ button.active {
   justify-content: center;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .preset-btn {

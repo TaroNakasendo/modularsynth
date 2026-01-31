@@ -292,6 +292,111 @@ const appStart = () => {
            if (!vocoder.micStream) {
                vocoder.toggleMic();
            }
+      } else if (name === 'lead') {
+          // Solo Lead: Dual Oscillator with Delay/Reverb
+          vco1.oscillator.type = 'sawtooth';
+          vco2.oscillator.type = 'square';
+          vco2.oscillator.detune.value = 5; // Slight detune
+
+          // Pitch Control
+          patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
+          patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
+
+          // Audio Path
+          patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vco2.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+          patchManager.connect(vca.getJack('OUT'), delay.getJack('IN'));
+          patchManager.connect(delay.getJack('OUT'), reverb.getJack('IN'));
+          patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+
+          // Control
+          patchManager.connect(kb.getJack('GATE'), adsr.getJack('GATE'));
+          
+          patchManager.connect(adsr.getJack('OUT'), vca.getJack('CV'));
+          patchManager.connect(adsr.getJack('OUT'), vcf.getJack('ENV'));
+
+          // Settings
+          adsr.attack = 0.05;
+          adsr.decay = 0.3;
+          adsr.sustain = 0.4;
+          adsr.release = 0.5;
+
+          vcf.filter.frequency.value = 800;
+          vcf.filter.Q.value = 5;
+
+          delay.setMix(0.3);
+          delay.delayNode.delayTime.value = 0.4;
+          reverb.updateMix(0.3);
+
+      } else if (name === 'helicopter') {
+          // Helicopter: Noise -> VCF -> VCA -> Out
+          // LFO Modulates VCF (Timbre) and VCA (chop)
+          noise.setNoiseType(false); // White Noise
+          
+          // Audio Path
+          patchManager.connect(noise.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+          patchManager.connect(vca.getJack('OUT'), output.getJack('IN'));
+          
+          // Modulation
+          patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV'));
+          patchManager.connect(lfo.getJack('OUT'), vca.getJack('CV')); // Rhythmic chopping
+
+          // Settings
+          lfo.oscillator.type = 'sawtooth'; // Sharp chop
+          lfo.oscillator.frequency.value = 6; // Rotor speed
+          
+          vcf.filter.frequency.value = 200; // Low rumble
+          vcf.filter.Q.value = 5;
+          
+          // VCA Gain: We want it to go from 0 to 1 with LFO.
+          // If LFO is -1 to 1:
+          // VCA Gain 0.5? 
+          vca.gainNode.gain.value = 0.5;
+
+          // Reverb for distance
+          // patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
+          // patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+          // reverb.updateMix(0.2);
+          // Let's keep it dry and loud for clarity first, or maybe subtle reverb
+          // Let's add slight reverb for realism
+          patchManager.disconnect(vca.getJack('OUT')); // Disconnect direct out
+           
+          patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
+          patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+          reverb.updateMix(0.1);
+
+      } else if (name === 'siren') {
+          // Dub Siren: LFO Modulating VCO Pitch
+          vco1.oscillator.type = 'sine';
+          
+          // Audio Path
+          patchManager.connect(vco1.getJack('OUT'), vca.getJack('IN'));
+          patchManager.connect(vca.getJack('OUT'), delay.getJack('IN'));
+          patchManager.connect(delay.getJack('OUT'), output.getJack('IN'));
+
+          // Modulation
+          patchManager.connect(lfo.getJack('OUT'), vco1.getJack('V/OCT'));
+          patchManager.connect(lfo.getJack('OUT'), vca.getJack('CV')); // Tremolo effect too
+
+          // Settings
+          lfo.oscillator.type = 'triangle';
+          lfo.oscillator.frequency.value = 1; // 1Hz Siren
+          
+          vca.gainNode.gain.value = 1; // Needed? LFO modulates CV, but VCA might need base gain? 
+          // Actually VCA is usually 0 and opened by CV. If CV is LFO (-1 to 1 or 0 to 1?), we might need offset or just rely on positive swing.
+          // Assuming LFO outputs -1 to 1?
+          // Let's set VCA gain to 0.5 to allow modulation around it if we were summing, but here we are patching to CV.
+          // In this synth, patching to CV usually controls the gain directly. 
+          // If LFO is bipolar, VCA might cut out. Let's just rely on the user experimenting or set a basic gate if needed.
+          // Let's use a constant high pitch tone modulated by LFO.
+          
+          vco1.oscillator.frequency.value = 600;
+          
+          delay.setMix(0.4);
+          delay.delayNode.delayTime.value = 0.25;
+          delay.feedbackGain.gain.value = 0.7;
       }
     } catch (e) {
       console.error("Patch load error", e);

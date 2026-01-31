@@ -50,6 +50,9 @@ export class Guide extends BaseModule {
         <li><strong>Sequencer:</strong> 自動演奏ループ。</li>
         <li><strong>Wind:</strong> 風の音（環境音）。</li>
         <li><strong>Vocoder:</strong> ロボットボイス体験。</li>
+        <li><strong>Solo Lead:</strong> エフェクトのかかったリード音。</li>
+        <li><strong>Helicopter:</strong> ヘリコプターの回転音。</li>
+        <li><strong>Dub Siren:</strong> レゲエ/ダブで使われるサイレン音。</li>
       </ul>
 
       <h4>ジャック解説 (Jacks)</h4>
