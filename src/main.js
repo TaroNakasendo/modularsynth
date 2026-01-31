@@ -108,39 +108,92 @@ const appStart = () => {
   // VCO 1 OUT -> VCF IN
   // VCF OUT -> VCA IN
   // VCA OUT -> OUTPUT IN
-  setTimeout(() => {
+  const loadPreset = (name) => {
+    patchManager.clearAllPatches();
+
+    const kb = modules[0];
+    const vco1 = modules[1];
+    const vco2 = modules[2];
+    const lfo = modules[3];
+    const vcf = modules[4];
+    const vca = modules[5];
+    const reverb = modules[6];
+    const output = modules[8];
+
+    // Reset default parameters
+    vco1.oscillator.detune.value = 0;
+    vco2.oscillator.detune.value = 0;
+    vco1.oscillator.type = 'sawtooth';
+    vco2.oscillator.type = 'sawtooth';
+
     try {
-        const kb = modules[0];
-        const vco1 = modules[1];
-        const vco2 = modules[2];
-        const lfo = modules[3];
-        const vcf = modules[4];
-        const vca = modules[5];
-        // Guide is modules[7], Output is modules[8]
-        const reverb = modules[6];
-        const output = modules[8];
+      if (name === 'default') {
+          // Pitch (Dual VCO Unison)
+          patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
+          patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
+          
+          // Detune VCO2 for thick sound
+          vco2.oscillator.detune.value = 10; 
 
-        // Pitch (Dual VCO Unison)
-        patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
-        patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
-        
-        // Detune VCO2 for thick sound
-        vco2.oscillator.detune.value = 10; 
+          // Audio Chain
+          patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vco2.getJack('OUT'), vcf.getJack('IN'));
+          
+          patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+          patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
+          patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
 
-        // Audio Chain: Summing both VCOs into VCF
-        patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
-        patchManager.connect(vco2.getJack('OUT'), vcf.getJack('IN'));
-        
-        patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
-        patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
-        patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+          // Gate & Mod
+          patchManager.connect(kb.getJack('GATE'), vca.getJack('CV'));
+          patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV')); 
+      
+      } else if (name === 'bass') {
+          // Single Osc, Low Filter
+          vco1.oscillator.type = 'square';
+          vco2.oscillator.type = 'sawtooth';
+          vco2.oscillator.detune.value = -1200; // Sub osc
 
-        // Gate & Mod
-        patchManager.connect(kb.getJack('GATE'), vca.getJack('CV'));
-        patchManager.connect(lfo.getJack('OUT'), vcf.getJack('CV')); 
+          patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
+          patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
+
+          patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vco2.getJack('OUT'), vcf.getJack('IN'));
+
+          patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+          patchManager.connect(vca.getJack('OUT'), output.getJack('IN')); // Dry bass
+
+          patchManager.connect(kb.getJack('GATE'), vca.getJack('CV'));
+          // Envelope on filter would be nice but we only have LFO for now
+          // So just static low pass or LFO wobble
+      
+      } else if (name === 'scifi') {
+          // LFO -> Pitch
+          patchManager.connect(lfo.getJack('OUT'), vco1.getJack('V/OCT'));
+          patchManager.connect(vco1.getJack('OUT'), reverb.getJack('IN'));
+          patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+      }
     } catch (e) {
-        console.error("Default patch error", e);
+      console.error("Patch load error", e);
     }
+  };
+
+  // Preset Buttons
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const preset = e.target.dataset.preset;
+      // Resume audio context if needed
+      if (audioCtx.state === 'suspended') {
+        resumeAudioContext();
+        startBtn.innerText = 'Audio Active';
+        startBtn.disabled = true;
+      }
+      loadPreset(preset);
+    });
+  });
+
+  // Initial Load
+  setTimeout(() => {
+    loadPreset('default');
   }, 100);
   
 };

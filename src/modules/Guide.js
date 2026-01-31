@@ -17,8 +17,14 @@ export class Guide extends BaseModule {
     content.style.textAlign = 'left';
     
     content.innerHTML = `
-      <h3 style="color: #ff9900; margin: 0 0 10px 0; border-bottom: 1px solid #444;">使い方ガイド</h3>
+      <h3 style="color: #ff9900; margin: 0 0 10px 0; border-bottom: 1px solid #444;">使い方ガイド v1.1</h3>
       
+      <p><strong style="color:#fff">🎛️ プリセット (New!)</strong><br>
+      画面下のボタンでパッチを切り替えられます。<br>
+      - <span style="color:#ccc">Default</span>: 基本のリードシンセ<br>
+      - <span style="color:#ccc">Fat Bass</span>: 重厚なベース<br>
+      - <span style="color:#ccc">Sci-Fi</span>: 宇宙的な効果音</p>
+
       <p><strong style="color:#fff">🎶 音の出し方</strong><br>
       ケーブルをドラッグしてジャムりましょう！<br>
       基本ルート:<br>
@@ -28,14 +34,6 @@ export class Guide extends BaseModule {
       PCキーボードで演奏できます。<br>
       [Z] [S] [X] ... [,] [L] [.]<br>
       (ド レ ミ ... 1オクターブ半)</p>
-      
-      <p><strong style="color:#fff">🎛️ パッチングのコツ</strong><br>
-      - <span style="color:cyan">LFO OUT</span> &rarr; <span style="color:cyan">VCF CV</span> で「ワウワウ」！<br>
-      - <span style="color:cyan">KEYBOARD GATE</span> &rarr; <span style="color:cyan">VCA CV</span> で発音制御。<br>
-      - <span style="color:orange">VCO 2</span> も使うと音が分厚くなります！<br>
-        1. KEYBOARD CV &rarr; 両方のVCO V/OCT<br>
-        2. 両方のVCO OUT &rarr; VCF IN<br>
-        3. 片方のDETUNEを少しずらすとGOOD👍</p>
       
       <p><strong style="color:#fff">💡 操作</strong><br>
       - ジャックをクリック: ケーブル切断<br>

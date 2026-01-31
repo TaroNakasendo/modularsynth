@@ -205,3 +205,24 @@ button {
 button:hover {
   filter: brightness(1.2);
 }
+
+#preset-controls {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.preset-btn {
+  background: #333;
+  color: #ccc;
+  border: 1px solid #555;
+  font-size: 0.8rem;
+  padding: 5px 10px;
+}
+
+.preset-btn:hover {
+  background: #444;
+  border-color: #777;
+}

@@ -129,6 +129,16 @@ export class PatchManager {
     });
   }
 
+  clearAllPatches() {
+    [...this.cables].forEach(cable => {
+       try {
+           cable.outDesc.target.disconnect(cable.inDesc.target.param || cable.inDesc.target.node);
+       } catch(e) { console.warn("Disconnect error", e); }
+    });
+    this.cables = [];
+    document.querySelectorAll('.jack.connected').forEach(el => el.classList.remove('connected'));
+  }
+
   render() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
