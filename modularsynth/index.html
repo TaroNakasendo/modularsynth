@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analog Modular Synth</title>
+    <script type="module" crossorigin src="./assets/index-BY_SDjDI.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-ye4B03SK.css">
+  </head>
+  <body>
+    <div id="app">
+      <div id="case-shell">
+        <div id="synth-case">
+          <div id="rack" class="rack-container">
+            <canvas id="cable-canvas"></canvas>
+            <!-- Modules will be injected here -->
+          </div>
+        </div>
+      </div>
+      <div id="controls">
+        <div id="preset-controls">
+          <span style="color: #888; margin-right: 10px; font-size: 0.8rem;">Presets:</span>
+          <button class="preset-btn" data-preset="none">None</button>
+          <button class="preset-btn" data-preset="default">Default</button>
+          <button class="preset-btn" data-preset="bass">Fat Bass</button>
+          <button class="preset-btn" data-preset="scifi">Sci-Fi</button>
+          <button class="preset-btn" data-preset="sequencer">Sequencer</button>
+          <button class="preset-btn" data-preset="wind">Wind</button>
+          <button class="preset-btn" data-preset="vocoder">Vocoder</button>
+          <button class="preset-btn" data-preset="lead">Solo Lead</button>
+          <button class="preset-btn" data-preset="helicopter">Helicopter</button>
+          <button class="preset-btn" data-preset="siren">Dub Siren</button>
+          <button class="preset-btn" data-preset="kick">Kick</button>
+          <button class="preset-btn" data-preset="gun">Gun</button>
+          <button class="preset-btn" data-preset="organ">Organ</button>
+          <button class="preset-btn" data-preset="piano">Piano</button>
+        </div>
+        <div class="instructions">Drag from Jack to Jack to patch. Click Jack to disconnect.</div>
+        <div id="virtual-keyboard"></div>
+      </div>
+    </div>
+    <div id="start-screen">
+      <div class="content">
+        <h1>Modular Synth</h1>
+        <button id="start-btn">START</button>
+      </div>
+    </div>
+  </body>
+</html>

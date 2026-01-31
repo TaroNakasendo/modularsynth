@@ -296,3 +296,45 @@ button.active {
   color: #000;
   box-shadow: 0 0 10px var(--accent-color);
 }
+
+/* Start Screen Overlay */
+#start-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  transition: opacity 0.5s ease;
+}
+
+#start-screen .content {
+  text-align: center;
+}
+
+#start-screen h1 {
+  font-size: 3rem;
+  color: var(--accent-color);
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 5px;
+}
+
+#start-screen button {
+  font-size: 1.5rem;
+  padding: 15px 40px;
+  background: transparent;
+  border: 2px solid var(--accent-color);
+  color: var(--accent-color);
+  transition: all 0.3s ease;
+}
+
+#start-screen button:hover {
+  background: var(--accent-color);
+  color: #000;
+  box-shadow: 0 0 20px var(--accent-color);
+}

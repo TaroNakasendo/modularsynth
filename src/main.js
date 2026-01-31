@@ -14,6 +14,7 @@ import { ADSR } from './modules/ADSR.js';
 import { Delay } from './modules/Delay.js';
 import { Vocoder } from './modules/Vocoder.js';
 import { PatchManager } from './core/PatchManager.js';
+import gateProcessorUrl from './worklets/gate-processor.js?url';
 
 const appStart = async () => {
   const rackEl = document.getElementById('rack');
@@ -25,9 +26,8 @@ const appStart = async () => {
 
   // Load Worklets
   try {
-      // In Vite dev, direct path usually works. In build, might need ?url import.
-      // For now, assuming dev server serves /src/...
-      await audioCtx.audioWorklet.addModule('/src/worklets/gate-processor.js');
+      // Load Worklet via Vite URL import for production compatibility
+      await audioCtx.audioWorklet.addModule(gateProcessorUrl);
   } catch(e) {
       console.warn("AudioWorklet load failed, fallback might be needed", e);
   }
@@ -592,4 +592,18 @@ const appStart = async () => {
 };
 
 // Start
-appStart();
+const startBtn = document.getElementById('start-btn');
+const startScreen = document.getElementById('start-screen');
+
+startBtn.addEventListener('click', async () => {
+  const ctx = getAudioContext();
+  if (ctx.state === 'suspended') {
+    await ctx.resume();
+  }
+  startScreen.style.opacity = '0';
+  setTimeout(() => {
+    startScreen.style.display = 'none';
+  }, 500);
+  
+  appStart();
+});
