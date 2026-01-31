@@ -377,7 +377,7 @@ const appStart = async () => {
           patchManager.connect(noise.getJack('OUT'), vcf.getJack('IN'));
           patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
           // Slight Reverb
-          patchManager.disconnect(vca.getJack('OUT')); // Disconnect direct out
+          // Slight Reverb
           patchManager.connect(vca.getJack('OUT'), reverb.getJack('IN'));
           patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
           
