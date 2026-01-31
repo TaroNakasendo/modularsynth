@@ -194,6 +194,47 @@ const appStart = () => {
           patchManager.connect(lfo.getJack('OUT'), vco1.getJack('V/OCT'));
           patchManager.connect(vco1.getJack('OUT'), reverb.getJack('IN'));
           patchManager.connect(reverb.getJack('OUT'), output.getJack('IN'));
+      } else if (name === 'sequencer') {
+          // Sequencer -> VCO1 Pitch
+          patchManager.connect(seq.getJack('CV'), vco1.getJack('V/OCT'));
+          
+          // Sequencer -> ADSR Gate
+          patchManager.connect(seq.getJack('GATE'), adsr.getJack('GATE'));
+          
+          // Audio Path
+          patchManager.connect(vco1.getJack('OUT'), vcf.getJack('IN'));
+          patchManager.connect(vcf.getJack('OUT'), vca.getJack('IN'));
+          patchManager.connect(vca.getJack('OUT'), delay.getJack('IN'));
+          patchManager.connect(delay.getJack('OUT'), output.getJack('IN'));
+          
+          // Modulation
+          patchManager.connect(adsr.getJack('OUT'), vca.getJack('CV'));
+          patchManager.connect(adsr.getJack('OUT'), vcf.getJack('ENV')); // Uses new ENV jack
+          
+          // Settings
+          vco1.oscillator.type = 'sawtooth';
+          vco1.oscillator.detune.value = 0;
+          
+          // Pluck Envelope
+          adsr.attack = 0.01;
+          adsr.decay = 0.2;
+          adsr.sustain = 0;
+          adsr.release = 0.2;
+          
+          // Filter - Low pass with resonance
+          vcf.filter.frequency.value = 400;
+          vcf.filter.Q.value = 8;
+          
+          // Delay
+          delay.setMix(0.4);
+          delay.delayNode.delayTime.value = 0.3;
+          
+          // Run Sequencer
+          seq.tempo = 200;
+          // Set a pattern (Audio only, UI won't update until we improve Sequencer module)
+          seq.setSteps([0, 12, 3, 7, 0, 10, 5, 12]);
+          
+          if (!seq.isRunning) seq.start();
       }
     } catch (e) {
       console.error("Patch load error", e);

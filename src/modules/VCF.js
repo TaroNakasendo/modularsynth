@@ -18,11 +18,14 @@ export class VCF extends BaseModule {
     this.addJack('OUT', 'out', this.filter);
     
     // CV Mod
-    // Create a generic CV input gain? Or direct?
-    // Direct CV is linear Hz.
-    // 1V/Oct is exponential.
-    // Let's rely on linear for now or Detune param (which filters act differently).
-    // BiquadFilter frequency is AudioParam, so we can connect.
+    // Standard CV (Linear Hz, good for LFO)
     this.addJack('CV', 'in', { param: this.filter.frequency });
+
+    // Envelope Input (Exponential/Detune based, good for Sweep)
+    // 0..1 input -> 0..3000 cents (2.5 octaves)
+    this.envGain = this.context.createGain();
+    this.envGain.gain.value = 3000;
+    this.envGain.connect(this.filter.detune);
+    this.addJack('ENV', 'in', { node: this.envGain });
   }
 }

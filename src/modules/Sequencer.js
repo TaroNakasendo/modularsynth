@@ -74,7 +74,7 @@ export class Sequencer extends BaseModule {
         knob.type = 'range';
         knob.min = 0;
         knob.max = 24; // 2 octaves
-        knob.value = 0; // default C
+        knob.value = this.steps[i]; // default C
         knob.step = 1; // Semitones
         knob.style.width = '100%';
         knob.style.height = '10px'; // Slim
@@ -83,6 +83,8 @@ export class Sequencer extends BaseModule {
         knob.addEventListener('input', (e) => {
             this.steps[i] = parseInt(e.target.value);
         });
+
+        this.stepKnobs.push(knob); // <--- Store reference
 
         const label = document.createElement('div');
         label.innerText = (i+1);
@@ -129,6 +131,14 @@ export class Sequencer extends BaseModule {
 
   restart() {
       this.start();
+  }
+
+  setSteps(newSteps) {
+      if (newSteps.length !== 8) return;
+      this.steps = [...newSteps];
+      this.stepKnobs.forEach((knob, i) => {
+          knob.value = this.steps[i];
+      });
   }
 
   tick() {

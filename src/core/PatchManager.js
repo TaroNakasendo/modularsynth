@@ -91,11 +91,23 @@ export class PatchManager {
     if (exists) return;
 
     // Web Audio Connection
-    // input.target is { node, param? }
-    if (input.target.param) {
-      out.target.connect(input.target.param); // This might throw if nodes from different contexts (unlikely here)
-    } else {
-      out.target.connect(input.target.node);
+    // Handle both wrapped objects {node, param} and direct AudioNodes
+    const sourceNode = out.target.node || out.target;
+    const destParam = input.target.param; // might be undefined
+    const destNode = input.target.node || input.target;
+
+    try {
+        if (destParam) {
+            sourceNode.connect(destParam);
+        } else if (destNode) {
+            sourceNode.connect(destNode);
+        } else {
+            console.error("Invalid connection destination", input);
+            return;
+        }
+    } catch (e) {
+        console.error("Connection failed", e);
+        return;
     }
     
     // Store visual connection
@@ -117,9 +129,10 @@ export class PatchManager {
     
     toRemove.forEach(c => {
        try {
-           // We specific disconnect calculation is complex in Web Audio without a wrapper.
-           // disconnect(destination) is supported in modern browsers.
-           c.outDesc.target.disconnect(c.inDesc.target.param || c.inDesc.target.node);
+           const sourceNode = c.outDesc.target.node || c.outDesc.target;
+           const destTarget = c.inDesc.target.param || c.inDesc.target.node || c.inDesc.target;
+           
+           sourceNode.disconnect(destTarget);
        } catch(e) { console.warn("Disconnect error", e); }
     });
 
@@ -136,7 +149,9 @@ export class PatchManager {
   clearAllPatches() {
     [...this.cables].forEach(cable => {
        try {
-           cable.outDesc.target.disconnect(cable.inDesc.target.param || cable.inDesc.target.node);
+           const sourceNode = cable.outDesc.target.node || cable.outDesc.target;
+           const destTarget = cable.inDesc.target.param || cable.inDesc.target.node || cable.inDesc.target;
+           sourceNode.disconnect(destTarget);
        } catch(e) { console.warn("Disconnect error", e); }
     });
     this.cables = [];
