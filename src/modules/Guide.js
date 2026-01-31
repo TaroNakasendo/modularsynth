@@ -5,7 +5,7 @@ export class Guide extends BaseModule {
     super('MANUAL');
     
     // Make this module wider to fit text
-    this.element.style.width = '240px'; 
+    this.element.style.width = '450px'; 
     this.element.style.overflowY = 'auto'; // readable
     this.element.style.background = '#222';
     
@@ -17,29 +17,55 @@ export class Guide extends BaseModule {
     content.style.textAlign = 'left';
     
     content.innerHTML = `
-      <p><strong style="color:#fff">🎛️ プリセット (New!)</strong><br>
-      画面下のボタンでパッチを切り替えられます。<br>
-      - <span style="color:#ccc">Default</span>: 基本のリードシンセ<br>
-      - <span style="color:#ccc">Fat Bass</span>: 重厚なベース<br>
-      - <span style="color:#ccc">Sci-Fi</span>: 宇宙的な効果音</p>
-
-      <p><strong style="color:#fff">🎹 演奏・操作</strong><br>
-      - <strong>Start Audio</strong>: クリックでON/OFF切り替え。<br>
-      - <strong>HOLD</strong>: キーボードモジュールのHOLDボタンで、鍵盤を離しても音が鳴り続けるモード(Arpに最適！)に切り替え。<br>
-      - <strong>ARP</strong>: アルペジエーターON/OFF。</p>
-
-      <p><strong style="color:#fff">🎶 音の出し方</strong><br>
-      ケーブルをドラッグしてジャムりましょう！<br>
-      基本ルート:<br>
-      <span style="color:#ff9900">VCO</span>(音源) &rarr; <span style="color:#ff9900">VCF</span>(フィルター) &rarr; <span style="color:#ff9900">VCA</span>(アンプ) &rarr; <span style="color:#ff9900">REVERB</span> &rarr; <span style="color:#ff9900">OUTPUT</span></p>
+      <h3>Modular Synth Guide</h3>
+      <p>Web Audio Modular Synthesizerへようこそ。</p>
       
-      <p><strong style="color:#fff">⌨️ キーボード</strong><br>
-      [Z] [S] [X] ... [,] [L] [.]<br>
-      (ド レ ミ ... 1オクターブ半)</p>
+      <h4>基本操作</h4>
+      <ul>
+        <li><strong>パッチ接続:</strong> OUTジャックからINジャックへドラッグ＆ドロップ。</li>
+        <li><strong>切断:</strong> ジャックをクリックすると接続が解除されます。</li>
+        <li><strong>ノブ操作:</strong> 上下にドラッグして値を調整します。</li>
+      </ul>
       
-      <p><strong style="color:#fff">💡 その他</strong><br>
-      - ジャックをクリック: ケーブル切断<br>
-      - ノブ: 上下にドラッグ</p>
+      <h4>モジュール解説</h4>
+      <ul>
+        <li><strong>Keyboard:</strong> 鍵盤やPCキーボード(Z,X,C...)で演奏。Pitch(CV)とGateを出力。</li>
+        <li><strong>Sequencer:</strong> 8ステップシーケンサー。スライダーで音程設定。</li>
+        <li><strong>VCO:</strong> オシレーター（音源）。V/OCTで音程制御。</li>
+        <li><strong>LFO:</strong> 低周波オシレーター。ビブラートや揺らぎに使用。</li>
+        <li><strong>Noise:</strong> ホワイト/ピンクノイズ。風の音やパーカッションに。</li>
+        <li><strong>ADSR:</strong> エンベロープ。音の時間変化（立ち上がりや余韻）を作る。</li>
+        <li><strong>VCF:</strong> フィルター。音の明るさを調整。CVやENVで動きをつける。</li>
+        <li><strong>VCA:</strong> アンプ。音量を制御。GATEやADSRで開閉する。</li>
+        <li><strong>Delay / Reverb:</strong> エコーと残響効果。</li>
+        <li><strong>Vocoder:</strong> ボコーダー。マイクの声でシンセを歌わせる。'Mic'ボタンで有効化。</li>
+      </ul>
+      
+      <h4>プリセット (Presets)</h4>
+      <p>画面上部のボタンでパッチを呼び出せます。</p>
+      <ul>
+        <li><strong>Default:</strong> 基本的なシンセリード。</li>
+        <li><strong>Fat Bass:</strong> 重厚なベースサウンド。</li>
+        <li><strong>Sci-Fi:</strong> SFチックな効果音。</li>
+        <li><strong>Sequencer:</strong> 自動演奏ループ。</li>
+        <li><strong>Wind:</strong> 風の音（環境音）。</li>
+        <li><strong>Vocoder:</strong> ロボットボイス体験。</li>
+      </ul>
+
+      <h4>ジャック解説 (Jacks)</h4>
+      <ul>
+        <li><strong>CV (Control Voltage):</strong> 音程や各種パラメータを制御する電圧。例: KeyboardのCV出力でVCOの音程を動かす。</li>
+        <li><strong>GATE:</strong> 鍵盤を押している間だけ電圧が出るジャック。VCAやADSRをトリガーする。</li>
+        <li><strong>V/OCT:</strong> 1ボルトで1オクターブ変化するピッチ入力。CVをここにつなぐ。</li>
+        <li><strong>FM:</strong> Frequency Modulation。音程を揺らす（ビブラート）入力。</li>
+        <li><strong>ENV:</strong> Envelope。ADSRからの信号でフィルターなどを時間変化させる入力。</li>
+        <li><strong>CARRIER:</strong> [Vocoder] 声で変調される「素材の音」（シンセ音）を入力する。</li>
+        <li><strong>MOD:</strong> [Vocoder] 声の代わりになる変調入力。マイクを使わない場合にリズムマシンなどをつなぐ。</li>
+      </ul>
+      
+      <p style="text-align: center; margin-top: 20px; color: #666; font-size: 0.8rem;">
+        Created with Web Audio API
+      </p>
     `;
     
     // Clear standard UI slots to make room (hacky but works)

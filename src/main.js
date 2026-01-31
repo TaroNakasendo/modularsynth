@@ -12,6 +12,7 @@ import { Sequencer } from './modules/Sequencer.js';
 import { Noise } from './modules/Noise.js';
 import { ADSR } from './modules/ADSR.js';
 import { Delay } from './modules/Delay.js';
+import { Vocoder } from './modules/Vocoder.js';
 import { PatchManager } from './core/PatchManager.js';
 
 const appStart = () => {
@@ -38,8 +39,9 @@ const appStart = () => {
     new VCA(),
     new Delay(),
     new Reverb(),
-    new Guide(),
-    new Output()
+    new Vocoder(),
+    new Output(),
+    new Guide()
   ];
   
   // Mount Modules
@@ -129,7 +131,7 @@ const appStart = () => {
     patchManager.clearAllPatches();
 
     // Module Indices based on instantiation order:
-    // 0: KB, 1: SEQ, 2: VCO1, 3: VCO2, 4: LFO, 5: NOISE, 6: ADSR, 7: VCF, 8: VCA, 9: DELAY, 10: REVERB, 11: GUIDE, 12: OUT
+    // 0: KB, 1: SEQ, 2: VCO1, 3: VCO2, 4: LFO, 5: NOISE, 6: ADSR, 7: VCF, 8: VCA, 9: DELAY, 10: REVERB, 11: VOCODER, 12: OUT, 13: GUIDE
     const kb = modules[0];
     const seq = modules[1];
     const vco1 = modules[2];
@@ -141,6 +143,7 @@ const appStart = () => {
     const vca = modules[8];
     const delay = modules[9];
     const reverb = modules[10];
+    const vocoder = modules[11];
     const output = modules[12];
 
     // Reset parameters
@@ -263,6 +266,32 @@ const appStart = () => {
            // Big Reverb
            reverb.generateImpulse(5);
            reverb.updateMix(0.6);
+      } else if (name === 'vocoder') {
+           // Vocoder Setup
+           // Carrier: VCO1 + VCO2 (Sawtooth for rich harmonics)
+           vco1.oscillator.type = 'sawtooth';
+           vco2.oscillator.type = 'sawtooth';
+           vco1.oscillator.frequency.value = 110; // Low A
+           vco2.oscillator.frequency.value = 112; // Detuned
+           // Set detune back to 0 just in case
+           vco1.oscillator.detune.value = 0;
+           vco2.oscillator.detune.value = 0;
+           
+           // Keyboard control
+           patchManager.connect(kb.getJack('CV'), vco1.getJack('V/OCT'));
+           patchManager.connect(kb.getJack('CV'), vco2.getJack('V/OCT'));
+           
+           // Connect to Vocoder Carrier
+           patchManager.connect(vco1.getJack('OUT'), vocoder.getJack('CARRIER'));
+           patchManager.connect(vco2.getJack('OUT'), vocoder.getJack('CARRIER'));
+           
+           // Vocoder Output
+           patchManager.connect(vocoder.getJack('OUT'), output.getJack('IN'));
+           
+           // Enable Mic if not already
+           if (!vocoder.micStream) {
+               vocoder.toggleMic();
+           }
       }
     } catch (e) {
       console.error("Patch load error", e);
