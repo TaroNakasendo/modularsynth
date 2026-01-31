@@ -341,6 +341,12 @@ export class Keyboard extends BaseModule {
       this.arpInterval = null;
       // Silence
       this.gateNode.offset.setTargetAtTime(0, this.context.currentTime, 0.01);
+      
+      // LEDs OFF
+      this.leds.forEach(l => {
+          l.style.background = '#333';
+          l.style.boxShadow = 'inset 1px 1px 2px rgba(0,0,0,0.5)';
+      });
   }
 
   restartArp() {
@@ -353,10 +359,28 @@ export class Keyboard extends BaseModule {
       if (this.activeKeys.length === 0) {
           // Silence
           this.gateNode.offset.setTargetAtTime(0, this.context.currentTime, 0.01);
+          // LEDs OFF
+          this.leds.forEach(l => {
+              l.style.background = '#333';
+              l.style.boxShadow = 'inset 1px 1px 2px rgba(0,0,0,0.5)';
+          });
           return;
       }
 
       this.arpIndex = (this.arpIndex + 1) % this.activeKeys.length;
+      
+      // LEDs Update
+      const ledIdx = this.arpIndex % this.leds.length;
+      this.leds.forEach((l, i) => {
+          if (i === ledIdx) {
+             l.style.background = '#ff9900';
+             l.style.boxShadow = '0 0 8px #ff9900';
+          } else {
+             l.style.background = '#333';
+             l.style.boxShadow = 'inset 1px 1px 2px rgba(0,0,0,0.5)';
+          }
+      });
+
       const key = this.activeKeys[this.arpIndex];
       const semitone = this.keyMap[key];
       const volts = semitone / 12;
@@ -371,9 +395,5 @@ export class Keyboard extends BaseModule {
       this.gateNode.offset.setValueAtTime(0, now + (this.arpRate/1000)*0.5); // 50% duty
       
       this.display.innerText = `ARP: ${semitone}`;
-      
-      // Visual feedback on keys?
-      // We could flash the key corresponding to current arp note
-      // But we already highlight activeKeys (held keys).
   }
 }
