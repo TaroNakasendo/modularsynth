@@ -17,6 +17,22 @@ export class Keyboard extends BaseModule {
     this.addJack('CV', 'out', this.cvNode);
     this.addJack('GATE', 'out', this.gateNode);
     
+    // Ribbon Controller Nodes
+    this.ribbonCvNode = this.context.createConstantSource();
+    this.ribbonCvNode.offset.value = 0;
+    this.ribbonCvNode.start();
+    
+    this.ribbonGateNode = this.context.createConstantSource();
+    this.ribbonGateNode.offset.value = 0;
+    this.ribbonGateNode.start();
+    
+    // Mix ribbon into main output so it works without patching
+    this.ribbonCvNode.connect(this.cvNode.offset);
+    this.ribbonGateNode.connect(this.gateNode.offset);
+
+    this.addJack('RIBBON', 'out', this.ribbonCvNode);
+    this.addJack('R.GATE', 'out', this.ribbonGateNode);
+    
     // Key mapping
     this.keyMap = {
       'z': 0, 's': 1, 'x': 2, 'd': 3, 'c': 4, 'v': 5, 'g': 6, 'b': 7, 'h': 8, 'n': 9, 'j': 10, 'm': 11,
@@ -295,6 +311,95 @@ export class Keyboard extends BaseModule {
       });
       
       container.style.width = `${whiteCount * (KEY_WIDTH + GAP)}px`;
+      
+      // Ribbon Controller Rendering
+      const ribbonHeight = 30;
+      const ribbonTop = 100; // Below the keys (keys end at ~85px)
+      const totalWidth = whiteCount * (KEY_WIDTH + GAP);
+      
+      const ribbon = document.createElement('div');
+      ribbon.className = 'ribbon-controller';
+      ribbon.style.position = 'absolute';
+      ribbon.style.top = `${ribbonTop}px`;
+      ribbon.style.left = '0px';
+      ribbon.style.width = `${totalWidth}px`;
+      ribbon.style.height = `${ribbonHeight}px`;
+      ribbon.style.background = 'linear-gradient(to right, #222, #444)';
+      ribbon.style.boxShadow = 'inset 0 0 5px #000';
+      ribbon.style.borderRadius = '4px';
+      ribbon.style.cursor = 'crosshair';
+      ribbon.style.touchAction = 'none'; // Prevent scrolling
+      
+      // Marker for touch position
+      const marker = document.createElement('div');
+      marker.style.position = 'absolute';
+      marker.style.width = '2px';
+      marker.style.height = '100%';
+      marker.style.background = 'var(--accent-color)';
+      marker.style.display = 'none';
+      marker.style.pointerEvents = 'none';
+      ribbon.appendChild(marker);
+      
+      const updateRibbon = (e) => {
+        e.preventDefault(); // Prevent scroll/drag behaviors
+        const rect = ribbon.getBoundingClientRect();
+        
+        let clientX;
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+        } else {
+            clientX = e.clientX;
+        }
+        
+        let x = clientX - rect.left;
+        x = Math.max(0, Math.min(x, rect.width));
+        
+        // Update Marker
+        marker.style.display = 'block';
+        marker.style.left = `${x}px`;
+        
+        // Calculate CV
+        // Map 0..width to 0..2V (2 octaves) roughly to match keys
+        // or just linear 0..1?
+        // Let's match the keyboard range: 24 semitones approx.
+        const range = 24 / 12; // 2 Octaves
+        const voltage = (x / rect.width) * range + this.octave;
+        
+        this.ribbonCvNode.offset.setValueAtTime(voltage, this.context.currentTime);
+        
+        // Update Display optional?
+        // this.display.innerText = `RBN: ${voltage.toFixed(2)}v`;
+      };
+      
+      const startRibbon = (e) => {
+          this.ribbonGateNode.offset.setValueAtTime(1, this.context.currentTime);
+          updateRibbon(e);
+          
+          const stopRibbon = () => {
+              this.ribbonGateNode.offset.setValueAtTime(0, this.context.currentTime);
+              // Reset Pitch Bend effect when released
+              this.ribbonCvNode.offset.setTargetAtTime(0, this.context.currentTime, 0.1);
+              
+              marker.style.display = 'none';
+              document.removeEventListener('mousemove', updateRibbon);
+              document.removeEventListener('mouseup', stopRibbon);
+              document.removeEventListener('touchmove', updateRibbon);
+              document.removeEventListener('touchend', stopRibbon);
+          };
+          
+          document.addEventListener('mousemove', updateRibbon);
+          document.addEventListener('mouseup', stopRibbon);
+          document.addEventListener('touchmove', updateRibbon, { passive: false });
+          document.addEventListener('touchend', stopRibbon);
+      };
+
+      ribbon.addEventListener('mousedown', startRibbon);
+      ribbon.addEventListener('touchstart', startRibbon, { passive: false });
+
+      container.appendChild(ribbon);
+
+      // Adjust container height
+      container.style.height = `${ribbonTop + ribbonHeight + 10}px`;
       container.style.margin = '15px auto'; 
   }
 
