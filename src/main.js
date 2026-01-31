@@ -397,6 +397,30 @@ const appStart = () => {
           delay.setMix(0.4);
           delay.delayNode.delayTime.value = 0.25;
           delay.feedbackGain.gain.value = 0.7;
+      } else if (name === 'kick') {
+          // Kick: Sine Wave + Pitch Env + Amp Env
+          vco1.oscillator.type = 'sine';
+          vco1.oscillator.frequency.value = 50; 
+          
+          // Audio Path
+          patchManager.connect(vco1.getJack('OUT'), vca.getJack('IN'));
+          patchManager.connect(vca.getJack('OUT'), output.getJack('IN'));
+          
+          // Modulation
+          // Keyboard Gate -> ADSR Gate
+          patchManager.connect(kb.getJack('GATE'), adsr.getJack('GATE'));
+          
+          // ADSR -> VCA CV (Amplitude)
+          patchManager.connect(adsr.getJack('OUT'), vca.getJack('CV'));
+          
+          // ADSR -> VCO Pitch (Frequency Sweep for "Thump")
+          patchManager.connect(adsr.getJack('OUT'), vco1.getJack('V/OCT'));
+          
+          // Settings
+          adsr.attack = 0.001;
+          adsr.decay = 0.2;
+          adsr.sustain = 0;
+          adsr.release = 0.1;
       }
     } catch (e) {
       console.error("Patch load error", e);
