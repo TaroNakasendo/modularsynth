@@ -15,11 +15,15 @@ export class PatchManager {
   }
 
   resizeCanvas() {
-    // Match the internal resolution to the display size
-    // Note: This relies on CSS sizing the canvas correctly (e.g. 100% of parent)
-    const rect = this.canvas.getBoundingClientRect();
-    this.canvas.width = rect.width;
-    this.canvas.height = rect.height;
+    // Canvas should cover the entire scrollable area of the rack
+    if (this.canvas.parentElement) {
+        this.canvas.width = this.canvas.parentElement.scrollWidth;
+        this.canvas.height = this.canvas.parentElement.scrollHeight;
+        
+        // Also update style width/height to ensure it doesn't scale weirdly if we didn't use CSS
+        this.canvas.style.width = `${this.canvas.parentElement.scrollWidth}px`;
+        this.canvas.style.height = `${this.canvas.parentElement.scrollHeight}px`;
+    }
   }
 
   // Get center of jack relative to canvas

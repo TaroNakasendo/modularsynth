@@ -8,6 +8,9 @@ import { Output } from './modules/Output.js';
 import { Keyboard } from './modules/Keyboard.js';
 import { Reverb } from './modules/Reverb.js';
 import { Guide } from './modules/Guide.js';
+import { Sequencer } from './modules/Sequencer.js';
+import { ADSR } from './modules/ADSR.js';
+import { Delay } from './modules/Delay.js';
 import { PatchManager } from './core/PatchManager.js';
 
 const appStart = () => {
@@ -24,11 +27,14 @@ const appStart = () => {
   // Instantiate Modules
   const modules = [
     new Keyboard(), // Input
+    new Sequencer(),
     new VCO(),
     new VCO(),
     new LFO(),
+    new ADSR(),
     new VCF(),
     new VCA(),
+    new Delay(),
     new Reverb(),
     new Guide(),
     new Output()
@@ -36,6 +42,9 @@ const appStart = () => {
   
   // Mount Modules
   modules.forEach(m => m.mount(rackEl));
+  
+  // Resize Canvas to fit full rack width now that modules are present
+  patchManager.resizeCanvas();
   
   // Global Event Listeners for Cable Patching
   // We attach to 'document' to catch events bubbling up from Jacks
@@ -117,21 +126,29 @@ const appStart = () => {
   const loadPreset = (name) => {
     patchManager.clearAllPatches();
 
+    // Module Indices based on instantiation order:
+    // 0: KB, 1: SEQ, 2: VCO1, 3: VCO2, 4: LFO, 5: ADSR, 6: VCF, 7: VCA, 8: DELAY, 9: REVERB, 10: GUIDE, 11: OUT
     const kb = modules[0];
-    const vco1 = modules[1];
-    const vco2 = modules[2];
-    const lfo = modules[3];
-    const vcf = modules[4];
-    const vca = modules[5];
-    const reverb = modules[6];
-    const output = modules[8];
+    const seq = modules[1];
+    const vco1 = modules[2];
+    const vco2 = modules[3];
+    const lfo = modules[4];
+    const adsr = modules[5];
+    const vcf = modules[6];
+    const vca = modules[7];
+    const delay = modules[8];
+    const reverb = modules[9];
+    const output = modules[11];
 
-    // Reset default parameters
+    // Reset parameters
     vco1.oscillator.detune.value = 0;
     vco2.oscillator.detune.value = 0;
     vco1.oscillator.type = 'sawtooth';
     vco2.oscillator.type = 'sawtooth';
 
+    // IMPORTANT: Reset VCA gain to 0 for Envelope control, or 1 for Drone
+    // We'll set it in the specific presets.
+    
     try {
       if (name === 'default') {
           // Pitch (Dual VCO Unison)
