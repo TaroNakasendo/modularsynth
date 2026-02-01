@@ -313,7 +313,7 @@ export class Keyboard extends BaseModule {
       
       // Ribbon Controller Rendering
       const ribbonHeight = 30;
-      const ribbonTop = 100; // Below the keys (keys end at ~85px)
+      const ribbonTop = 90; // Closer to keys (keys end at 85px)
       const totalWidth = whiteCount * (KEY_WIDTH + GAP);
       
       const ribbon = document.createElement('div');
@@ -331,6 +331,8 @@ export class Keyboard extends BaseModule {
       
       ribbon.style.display = 'flex';
       ribbon.style.overflow = 'hidden';
+
+      // ... (dots logic omitted for brevity in diff, but we are replacing the block up to container height)
 
       // Dots for notes
       const isBlackKey = (n) => [1, 3, 6, 8, 10].includes(n % 12);

@@ -64,8 +64,9 @@ const appStart = async () => {
   
   let currentJack = null; // Hovered jack
   
-  // Start Dragging
-  document.addEventListener('mousedown', (e) => {
+  // --- Unified Patching Interaction (Mouse & Touch) ---
+
+  const handlePatchStart = (e, x, y) => {
     // Check if clicking a jack
     if (e.target.classList.contains('jack')) {
       const moduleName = e.target.dataset.module;
@@ -74,47 +75,78 @@ const appStart = async () => {
       const module = modules.find(m => m.name === moduleName && m.getJack(jackName).element === e.target);
       if (module) {
         const jackInfo = module.getJack(jackName);
-        
-        // Interaction:
-        // Left Click: Start Patching
-        
-        patchManager.startDrag(jackInfo, e.clientX, e.clientY);
-        e.preventDefault();
+        patchManager.startDrag(jackInfo, x, y);
+        if (e.cancelable) e.preventDefault();
       }
     }
-  });
-  
-  // Dragging
-  document.addEventListener('mousemove', (e) => {
-    if (patchManager.activeDrag) {
-      patchManager.updateDrag(e.clientX, e.clientY);
-    }
-  });
+  };
 
-  // End Dragging
-  document.addEventListener('mouseup', (e) => {
+  const handlePatchMove = (e, x, y) => {
     if (patchManager.activeDrag) {
-      // Check if we dropped on a jack
+      patchManager.updateDrag(x, y);
+      if (e.cancelable) e.preventDefault();
+    }
+  };
+
+  const handlePatchEnd = (e, x, y) => {
+    if (patchManager.activeDrag) {
       let targetJack = null;
-      // We need to use elementFromPoint because mouseup is on the document (or top layer)
-      // canvas has pointer-events: none, so we should hit the jack.
-      const el = document.elementFromPoint(e.clientX, e.clientY);
+      // Find element under cursor/finder
+      const el = document.elementFromPoint(x, y);
       
       if (el && el.classList.contains('jack')) {
         const jackName = el.dataset.jack;
-        
-        // Iterate modules to find the one with this jack element
+        const moduleName = el.dataset.module;
+        // Search modules for this jack
         for (const m of modules) {
-           const jack = m.getJack(jackName);
-           if (jack && jack.element === el) {
-             targetJack = jack;
-             break;
+           // If module name matches (optimization)
+           if (m.name === moduleName) {
+             const jack = m.getJack(jackName);
+             if (jack && jack.element === el) {
+               targetJack = jack;
+               break;
+             }
            }
+        }
+        // Fallback search if module name match failed or logic differs
+        if (!targetJack) {
+             for (const m of modules) {
+                const jack = m.getJack(jackName);
+                if (jack && jack.element === el) {
+                    targetJack = jack;
+                    break;
+                }
+             }
         }
       }
       
-      patchManager.endDrag(targetJack, e.clientX, e.clientY);
+      patchManager.endDrag(targetJack, x, y);
     }
+  };
+
+  // Mouse Listeners
+  document.addEventListener('mousedown', (e) => {
+      handlePatchStart(e, e.clientX, e.clientY);
+  });
+  document.addEventListener('mousemove', (e) => {
+      handlePatchMove(e, e.clientX, e.clientY);
+  });
+  document.addEventListener('mouseup', (e) => {
+      handlePatchEnd(e, e.clientX, e.clientY);
+  });
+
+  // Touch Listeners
+  document.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      handlePatchStart(e, touch.clientX, touch.clientY);
+  }, { passive: false });
+  document.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      handlePatchMove(e, touch.clientX, touch.clientY);
+  }, { passive: false });
+  document.addEventListener('touchend', (e) => {
+      const touch = e.changedTouches[0];
+      handlePatchEnd(e, touch.clientX, touch.clientY);
   });
 
 
@@ -595,15 +627,39 @@ const appStart = async () => {
 const startBtn = document.getElementById('start-btn');
 const startScreen = document.getElementById('start-screen');
 
-startBtn.addEventListener('click', async () => {
-  const ctx = getAudioContext();
-  if (ctx.state === 'suspended') {
-    await ctx.resume();
-  }
+let isStarted = false;
+
+const initAudio = async () => {
+  if (isStarted) return;
+  isStarted = true;
+
+  // Immediate UI update
   startScreen.style.opacity = '0';
+  startScreen.style.pointerEvents = 'none';
+  
+  const ctx = getAudioContext();
+  
+  // Audio Unlock Logic
+  try {
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      
+      // iOS Silent Buffer Trick
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+  } catch (err) {
+      console.warn("Audio init warning:", err);
+  }
+
   setTimeout(() => {
     startScreen.style.display = 'none';
   }, 500);
   
   appStart();
-});
+};
+
+startBtn.addEventListener('click', initAudio);

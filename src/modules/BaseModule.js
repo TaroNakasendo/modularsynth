@@ -75,39 +75,68 @@ export class BaseModule {
         if (this.onKnobChange) this.onKnobChange(label, currentVal); 
     };
 
+    // Shared Drag Logic
+    const handleStart = (y) => {
+        isDragging = true;
+        startY = y;
+        document.body.style.cursor = 'ns-resize';
+    };
+
+    const handleMove = (y) => {
+        if (!isDragging) return;
+        const dy = startY - y;
+        const sensitivity = (max - min) / 200; // 200px for full range
+        let newVal = currentVal + (dy * sensitivity);
+        newVal = Math.max(min, Math.min(max, newVal));
+        
+        if (newVal !== currentVal) {
+          currentVal = newVal;
+          if (param) {
+            // Smooth smoothing?
+             param.setTargetAtTime(newVal, this.context.currentTime, 0.01);
+          }
+          updateVisuals();
+          // Trigger callback if needed
+          if (this.onKnobChange) this.onKnobChange(label, newVal);
+        }
+        startY = y;
+    };
+
+    const handleEnd = () => {
+        if(isDragging) {
+          isDragging = false;
+          document.body.style.cursor = 'default';
+        }
+    };
+
+    // Mouse Events
     knob.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      startY = e.clientY;
-      document.body.style.cursor = 'ns-resize';
+      handleStart(e.clientY);
       e.preventDefault();
     });
 
     window.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      const dy = startY - e.clientY;
-      const sensitivity = (max - min) / 200; // 200px for full range
-      let newVal = currentVal + (dy * sensitivity);
-      newVal = Math.max(min, Math.min(max, newVal));
-      
-      if (newVal !== currentVal) {
-        currentVal = newVal;
-        if (param) {
-          // Smooth smoothing?
-           param.setTargetAtTime(newVal, this.context.currentTime, 0.01);
-        }
-        updateVisuals();
-        // Trigger callback if needed
-        if (this.onKnobChange) this.onKnobChange(label, newVal);
-      }
-      startY = e.clientY;
+      handleMove(e.clientY);
     });
 
-    window.addEventListener('mouseup', () => {
-      if(isDragging) {
-        isDragging = false;
-        document.body.style.cursor = 'default';
-      }
-    });
+    window.addEventListener('mouseup', handleEnd);
+
+    // Touch Events
+    knob.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      handleStart(touch.clientY);
+      e.preventDefault(); // Prevent scrolling logic
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+            const touch = e.touches[0];
+            handleMove(touch.clientY);
+            // e.preventDefault(); // We might want to prevent scroll IF dragging knob
+        }
+    }, { passive: false });
+
+    window.addEventListener('touchend', handleEnd);
 
     return knob;
   }

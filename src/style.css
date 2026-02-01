@@ -24,21 +24,32 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Use dvh for dynamic viewport height on mobile */
   height: 100vh;
-  justify-content: center;
+  height: 100dvh; 
+  justify-content: flex-start; /* Start from top, allow flow */
+  width: 100%;
+  overflow-y: auto; /* Allow vertical scroll */
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 50px; /* Space for footer/scroll */
 }
 
 /* Outer Shell with Frame and Cheeks */
 #case-shell {
   position: relative;
   background-color: var(--case-color);
-  border: 20px solid #222;
+  border: 15px solid #222; /* Smaller border for mobile */
   border-radius: 10px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  width: 90vw;
-  height: 80vh;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  width: 95vw;
+  /* Reduce height to allow room for keyboard on typical phones */
+  height: 60vh; 
+  height: 60dvh; 
+  min-height: 600px; /* Ensure modules assume valid height */
   box-sizing: border-box;
   display: flex;
+  margin-top: 10px;
+  flex-shrink: 0; /* Prevent squashing */
 }
 
 
@@ -238,15 +249,17 @@ button.active {
 #virtual-keyboard {
   margin-top: 15px;
   position: relative;
+  /* Use auto/min-height to adapt to content */
   height: auto;
-  min-height: 140px;
-  width: 100%;
-  /* max-width removed to prevent scrollbar */
-  overflow-x: visible;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
+  min-height: 100px;
+  width: 95vw; /* Ensure it fits */
+  background: rgba(0,0,0,0.2); /* Slight background to see bounds */
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
 }
+
+/* .ribbon-controller is styled in JS for positioning relative to keys */
 
 .v-key {
   position: absolute;
